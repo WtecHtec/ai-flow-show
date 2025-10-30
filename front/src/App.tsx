@@ -1,11 +1,13 @@
 import PerViewPage from "@/views/preview";
+import EditorPage from "./views/editor";
 
 
 export default function App() {
+
   return (
-    <main>
-      <p className="bg-red-500">App</p>
-      <PerViewPage ></PerViewPage>
+    <main className="overflow-auto">
+      <EditorPage ></EditorPage>
+      {/* <PerViewPage ></PerViewPage> */}
     </main>
   );
 }

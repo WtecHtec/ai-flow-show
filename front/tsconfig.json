@@ -11,7 +11,8 @@
     "moduleResolution": "node",
     "paths": {
       "@/*": ["./src/*"],
-    }
+    },
+    "resolveJsonModule": true,
   },
   "include": ["**/*.ts", "**/*.tsx"]
 }
