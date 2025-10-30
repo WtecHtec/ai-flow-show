@@ -1,0 +1,41 @@
+{
+  "name": "vanilla-react18-typescript-webpack",
+  "version": "1.0.0",
+  "license": "MIT",
+  "scripts": {
+    "dev": "webpack serve",
+    "build": "webpack"
+  },
+  "dependencies": {
+    "@alilc/lowcode-datasource-fetch-handler": "^1.2.1",
+    "@alilc/lowcode-react-renderer": "^1.3.4",
+    "@alilc/lowcode-utils": "^1.3.4",
+    "lodash": "^4.17.21",
+    "moment": "^2.30.1",
+    "react": "^17.0.2",
+    "react-dom": "^17.0.2",
+    "sass": "^1.93.2",
+    "sass-loader": "^16.0.6"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.1.16",
+    "@types/copy-webpack-plugin": "^10.1.0",
+    "@types/lodash": "^4.17.20",
+    "@types/node": "^18.11.18",
+    "@types/react": "^17.0.2",
+    "@types/react-dom": "^17.0.2",
+    "@types/webpack": "^5.28.0",
+    "autoprefixer": "^10.4.21",
+    "copy-webpack-plugin": "^11.0.0",
+    "css-loader": "^6.7.3",
+    "postcss-loader": "^8.2.0",
+    "style-loader": "^3.3.1",
+    "tailwindcss": "^4.1.16",
+    "ts-loader": "^9.4.2",
+    "ts-node": "^10.9.1",
+    "typescript": "^4.9.4",
+    "webpack": "^5.75.0",
+    "webpack-cli": "^5.0.1",
+    "webpack-dev-server": "^4.11.1"
+  }
+}
