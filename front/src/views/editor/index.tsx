@@ -33,7 +33,16 @@ const EditorPage = () => {
             init(el, {
                 enableCondition: true,
                 enableCanvasLock: true,
+      
+                locale: 'zh-CN',
+      
+                // 默认绑定变量
+                supportVariableGlobally: true,
+                requestHandlersMap: {
+                  fetch: createFetchHandler(),
+                },
                 appHelper,
+                enableContextMenu: true,
             });
           
         }

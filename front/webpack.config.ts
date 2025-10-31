@@ -1,7 +1,12 @@
 import path from "path";
-import { Configuration, DefinePlugin, ProvidePlugin } from "webpack";
+import  webpack, { Configuration } from "webpack";
 import CopyWebpackPlugin from "copy-webpack-plugin";
 import 'webpack-dev-server';
+
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const config: Configuration = {
   mode:
@@ -54,7 +59,15 @@ const config: Configuration = {
         warnings: false,
         errors: true
       }
-    }
+    },
+    static: {
+      directory: path.resolve(__dirname, "public"),
+      publicPath: "/",
+    },
+    historyApiFallback: {
+      index: "/index.html",
+      disableDotRule: true,
+    },
   },
   resolve: {
     extensions: [".tsx", ".ts", ".js"],
@@ -65,6 +78,7 @@ const config: Configuration = {
   output: {
     filename: "bundle.js",
     path: path.resolve(__dirname, "dist"),
+    publicPath: "/",
   },
   externals: {
    "react": "var window.React",
@@ -81,7 +95,7 @@ const config: Configuration = {
     new CopyWebpackPlugin({
       patterns: [{ from: "public" }],
     }),
-    new DefinePlugin({
+    new webpack.DefinePlugin({
       VERSION_PLACEHOLDER: JSON.stringify('^1.3.4'), // 随便填一个版本号即可
     }),
     // new ProvidePlugin({
