@@ -14,7 +14,7 @@ const PreviewSamplePlugin = (ctx: IPublicModelPluginContext) => {
         saveSchema(scenarioName);
         setTimeout(() => {
           const search = location.search ? `${location.search}&scenarioName=${scenarioName}` : `?scenarioName=${scenarioName}`;
-          window.open(`./preview${search}`);
+          window.open(`./view${search}`);
         }, 500);
       };
       skeleton.add({

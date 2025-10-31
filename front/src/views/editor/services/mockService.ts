@@ -4,6 +4,7 @@ import { Message, Dialog } from '@alifd/next';
 import { IPublicTypeProjectSchema, IPublicEnumTransformStage } from '@alilc/lowcode-types';
 import DefaultPageSchema from './defaultPageSchema.json';
 import DefaultI18nSchema from './defaultI18nSchema.json';
+import { apiSaveTemp } from '../api';
 
 const generateProjectSchema = (pageSchema: any, i18nSchema: any): IPublicTypeProjectSchema => {
   return {
@@ -18,7 +19,8 @@ const generateProjectSchema = (pageSchema: any, i18nSchema: any): IPublicTypePro
 export const saveSchema = async (scenarioName: string = 'unknown') => {
   setProjectSchemaToLocalStorage(scenarioName);
   await setPackagesToLocalStorage(scenarioName);
-  Message.success('成功保存到本地');
+  await apiSaveTemp(project.exportSchema(IPublicEnumTransformStage.Save))
+  Message.success('成功保存');
 };
 
 export const resetSchema = async (scenarioName: string = 'unknown') => {

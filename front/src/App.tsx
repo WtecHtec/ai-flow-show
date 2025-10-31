@@ -17,7 +17,8 @@ export default function App() {
         <Routes>
           <Route path="/" element={<Navigate to="/editor" replace />} />
           <Route path="/editor" element={<EditorPage />} />
-          <Route path="/preview" element={<PerViewPage />} />
+          {/* <Route path="/preview" element={<PerViewPage />} /> */}
+          <Route path="/view/:id?" element={<PerViewPage />} />
           <Route path="*" element={<div>Not Found</div>} />
         </Routes>
       </Suspense>

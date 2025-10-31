@@ -73,8 +73,16 @@ app.get("/temp/:json_id", async (req, res) => {
     const filePath = path.join(DATA_DIR, `${json_id}.json`);
     const fileData = await fs.readFile(filePath, "utf-8");
     const json = JSON.parse(fileData);
+    const files = await fs.readdir(DATA_DIR);
 
-    res.json({ temp_id: json.temp_id });
+    const temp_id =  json.temp_id
+    const tempFilePath = path.join(DATA_DIR, `${temp_id}.json`);
+    const content = JSON.parse(await fs.readFile(tempFilePath, "utf-8"));
+    if (content) {
+      return res.json(content);
+    }
+
+    res.status(404).json({ error: "temp_id not found" });
   } catch (err) {
     res.status(404).json({ error: "JSON not found" });
   }
@@ -96,6 +104,27 @@ app.get("/by-temp/:temp_id", async (req, res) => {
 
     res.status(404).json({ error: "temp_id not found" });
   } catch (err) {
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+// ✅ 接口5: 保存模板
+app.post("/save_temp", async (req, res) => {
+  try {
+    const { data } = req.body;
+    if (!data) {
+      return res.status(400).json({ error: "Missing data or temp_id" });
+    }
+
+    const temp_id = nanoid(8);
+    const filePath = path.join(DATA_DIR, `${temp_id}.json`);
+    const content = { ...data };
+
+    await fs.writeFile(filePath, JSON.stringify(content, null, 2), "utf-8");
+
+    return res.json({ temp_id });
+  } catch (err) {
+    console.error(err);
     res.status(500).json({ error: "Server error" });
   }
 });
