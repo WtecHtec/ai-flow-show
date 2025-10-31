@@ -38,14 +38,14 @@ const config: Configuration = {
       },
       {
         test: /\.(sass|css|scss)$/,
-        use: ["style-loader", "css-loader",   {
+        use: ["style-loader", "css-loader", "postcss-loader",  {
           loader: 'sass-loader',
           options: {
             sassOptions: {
               quietDeps: true, // 忽略 node_modules 里的警告
             },
           },
-        }, "postcss-loader", ],
+        },  ],
       },
       {
         test: /\.svg$/i,

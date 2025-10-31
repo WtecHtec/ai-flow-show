@@ -1,9 +1,30 @@
-import LowcodeRenderer from "@/components/LowcodeRenderer"
+import LowcodeRenderer from "@/components/LowcodeRenderer";
 // import { mockProjectSchema } from "@/mock/mockSchema"
-import defaultPageSchema from "@/mock/defaultPageSchema.json"
+import defaultPageSchema from "@/mock/defaultPageSchema.json";
+import { getProjectSchemaFromLocalStorage } from "../editor/services/mockService";
+import { useEffect, useState } from "react";
+const getScenarioName = function () {
+  if (location.search) {
+    return (
+      new URLSearchParams(location.search.slice(1)).get("scenarioName") ||
+      "general"
+    );
+  }
+  return "general";
+};
 const PerViewPage: React.FC = () => {
+  const [projectSchema, setProjectSchema] = useState(null);
+  const scenarioName = getScenarioName();
+  useEffect(() => {
+    const projectSchema = getProjectSchemaFromLocalStorage(scenarioName);
+    setProjectSchema({ ...projectSchema });
+  }, [scenarioName]);
 
-    return <LowcodeRenderer projectSchema={defaultPageSchema}></LowcodeRenderer>
-}
+  if (!projectSchema) {
+    return <div>暂无数据</div>;
+  }
 
-export default PerViewPage
+  return <LowcodeRenderer projectSchema={projectSchema}></LowcodeRenderer>;
+};
+
+export default PerViewPage;

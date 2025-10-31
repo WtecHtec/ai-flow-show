@@ -2,7 +2,7 @@ import express from "express";
 import fs from "fs/promises";
 import path from "path";
 import { nanoid } from "nanoid";
-import cors from "cors"
+import cors from "cors";
 import { fileURLToPath } from "url";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -15,10 +15,19 @@ const DATA_DIR = path.resolve(__dirname, "data");
 // ✅ 启动时确保 data 文件夹存在
 await fs.mkdir(DATA_DIR, { recursive: true });
 
-app.use( cors({
-    origin: "http://localhost:5556", // 指定允许的前端地址
-    credentials: true,               // 允许跨域携带 cookie / 凭证
-  }));
+const allowedOrigins = ["http://localhost:8081", "http://localhost:5566"];
+app.use(
+  cors({
+    origin(origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    credentials: true, // 允许跨域携带 cookie / 凭证
+  })
+);
 app.use(express.json());
 
 // ✅ 接口1: 保存 data 为 json 文件，生成 json_id 与 temp_id 映射
