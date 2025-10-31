@@ -16,10 +16,12 @@ const generateProjectSchema = (pageSchema: any, i18nSchema: any): IPublicTypePro
 }
 
 
-export const saveSchema = async (scenarioName: string = 'unknown') => {
+export const saveSchema = async (scenarioName: string = 'unknown', type: "save" | "perview" = 'perview') => {
   setProjectSchemaToLocalStorage(scenarioName);
   await setPackagesToLocalStorage(scenarioName);
-  await apiSaveTemp(project.exportSchema(IPublicEnumTransformStage.Save))
+  if (type === 'save') {
+    await apiSaveTemp(project.exportSchema(IPublicEnumTransformStage.Save))
+  }
   Message.success('成功保存');
 };
 
