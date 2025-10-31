@@ -73,7 +73,13 @@ const config: Configuration = {
     extensions: [".tsx", ".ts", ".js"],
     alias: {
       "@": path.resolve(__dirname, "src"),
-    }
+    },
+    fallback: {
+      "os": "os-browserify/browser",
+      "path": "path-browserify",
+      "fs": false,
+      "assert": "assert/"
+    },
   },
   output: {
     filename: "bundle.js",

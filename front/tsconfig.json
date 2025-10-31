@@ -10,6 +10,8 @@
     "skipLibCheck": true /* Skip type checking all .d.ts files. */,
     "outDir": "dist",
     "moduleResolution": "node",
+    "noImplicitAny": false,
+    "noEmitOnError": false,
     "paths": {
       "@/*": ["./src/*"],
     },

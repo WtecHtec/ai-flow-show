@@ -11,6 +11,7 @@ import DataSourcePanePlugin from "@alilc/lowcode-plugin-datasource-pane";
 import PreviewSamplePlugin from "./plugins/plugin-preview-sample";
 import DefaultSettersRegistryPlugin from "./plugins/plugin-default-setters-registry";
 import SaveSamplePlugin from "./plugins/plugin-save-sample";
+import CodeEditorPlugin from './plugins/plugin-code-editor'
 
 const EditorPage = () => {
   async function registerPlugins() {
@@ -52,6 +53,8 @@ const EditorPage = () => {
 
     // 保存、重置
     await plugins.register(SaveSamplePlugin);
+
+    await plugins.register(CodeEditorPlugin)
   }
   useEffect(() => {
     const handle = async () => {
