@@ -39,25 +39,25 @@ const CodeEditorPlugin = (ctx: IPublicModelPluginContext, options: ICodeEditorPl
         props: {
             icon,
           description: '代码编辑器',
-          align: 'bottom',
+          // align: 'bottom',
           width: 500
         },
       });
 
       // 注册右键菜单
-      skeleton.add({
-        area: 'leftArea',
-        name: 'codeEditorMenu',
-        type: 'Widget',
-        props: {
-          align: 'bottom',
-        },
-        content: CodeEditor,
-        contentProps: {
-          ctx,
-          options,
-        },
-      });
+      // skeleton.add({
+      //   area: 'leftArea',
+      //   name: 'codeEditorMenu',
+      //   type: 'Widget',
+      //   props: {
+      //     align: 'bottom',
+      //   },
+      //   content: CodeEditor,
+      //   contentProps: {
+      //     ctx,
+      //     options,
+      //   },
+      // });
 
       // 监听选中节点变化
       project.currentDocument?.selection.onSelectionChange(() => {

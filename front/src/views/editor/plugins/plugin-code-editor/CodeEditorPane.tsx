@@ -5,6 +5,12 @@ import { common, project } from "@alilc/lowcode-engine";
 import { schema2CssCode, schema2JsCode } from "./utils/schema-to-code";
 import { transformAst } from "./utils/ast";
 import { getMethods } from "./utils/get-methods";
+import { Button, message } from "antd";
+import { stateParser } from "./utils/state-parser";
+
+const LIFECYCLES_FUNCTION_MAP = {
+    react: ['constructor', 'render', 'componentDidMount', 'componentDidUpdate', 'componentWillUnmount', 'componentDidCatch'],
+  };
 
 export const CodeEditorPane: React.FC<{
   ctx: IPublicModelPluginContext;
@@ -18,14 +24,46 @@ export const CodeEditorPane: React.FC<{
   const [schema, setSchema] = useState(() =>
     project.exportSchema(common.designerCabin.TransformStage.Save)
   );
-  const saveSchemaRef = useRef<() => void>(); // save code to schema
+  const saveSchemaRef = useRef<(jsCode , cssCode) => void>(); // save code to schema
 
   const getSchemaFromCode = (code: any) => {
     const ast = transformAst(code);
     console.log("methods,", ast)
-    // const { methods, errorsByMethods } = getMethods(ast);
+    const { methods, errorsByMethods } = getMethods(ast);
     // console.log("methods, errorsByMethods", methods, errorsByMethods)
-    return {};
+    let lifeCycles: Record<string, unknown> = {};
+    let newMethods: Record<string, unknown> = {};
+
+    Object.keys(methods).forEach((method) => {
+        if (LIFECYCLES_FUNCTION_MAP.react.indexOf(method) >= 0) {
+          lifeCycles[method] = methods[method];
+        } else {
+          newMethods[method] = methods[method];
+        }
+      });
+
+      if (Object.keys(errorsByMethods).length > 0) {
+        alert("部分函数解析出错")
+       message.error({
+            content: (
+              <>
+                <span>函数异常</span>
+                {Object.entries(errorsByMethods).map(([key, err], index) => (
+                  <p key={index}>
+                    {key}: {err}
+                  </p>
+                ))}
+              </>
+            ),
+          });
+      }
+
+      return {
+        state: stateParser(ast),
+        methods: newMethods,
+        lifeCycles,
+        originCode: code,
+      };
   };
   useEffect(() => {
     //@ts-ignore
@@ -43,6 +81,10 @@ export const CodeEditorPane: React.FC<{
           lifeCycles,
           originCode = "",
         } = (getSchemaFromCode(jsCode) ?? {}) as any;
+        console.log( "测试", state,
+            methods,
+            lifeCycles,
+            )
         const css = cssCode;
         pageNode.state = state;
         pageNode.methods = methods;
@@ -51,9 +93,9 @@ export const CodeEditorPane: React.FC<{
         pageNode.originCode = originCode;
 
         pageNode.css = css;
-        // lowcodeProjectRef.current?.importSchema(currentSchema);
-
-        // setSchema(currentSchema);
+        lowcodeProjectRef.current?.importSchema(currentSchema);
+        // console.log("pageNode", pageNode)
+        setSchema(currentSchema);
       } catch (err) {}
     };
 
@@ -63,16 +105,16 @@ export const CodeEditorPane: React.FC<{
   }, [ctx]);
 
   const handleCodeChange = (newCode: string) => {
-    setJsCode(newCode);
+    codeType === 'jsx' ? setJsCode(newCode) : setCssCode(newCode);
   };
 
   useEffect(() => {
-    if (codeType === "jsx") {
-      setJsCode(schema2JsCode(schema));
-      getSchemaFromCode(schema2JsCode(schema))
-    } else if (codeType === "css") {
-      setCssCode(schema2CssCode(schema));
-    }
+    // if (codeType === "jsx") {
+    //   getSchemaFromCode(schema2JsCode(schema))
+    // } else if (codeType === "css") {
+    // }
+    setJsCode(schema2JsCode(schema));
+    setCssCode(schema2CssCode(schema));
   }, [codeType, schema]);
   return (
     <div
@@ -89,6 +131,7 @@ export const CodeEditorPane: React.FC<{
           borderBottom: "1px solid #333",
           background: "#1e1e1e",
         }}
+        className="flex justify-between"
       >
         <div style={{ display: "flex", gap: "10px", marginBottom: "10px" }}>
           <button
@@ -118,6 +161,9 @@ export const CodeEditorPane: React.FC<{
             CSS
           </button>
         </div>
+        <Button type="link" className="text-blue-600 cursor-pointer" onClick={() => {
+            saveSchemaRef.current?.(jsCode, cssCode);
+        }}> 保存 </Button>
       </div>
       <div style={{ flex: 1 }}>
         {codeType === "jsx" ? (

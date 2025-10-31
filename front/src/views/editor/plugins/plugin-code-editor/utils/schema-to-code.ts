@@ -59,6 +59,7 @@ function initLifeCycleCode(componentSchema: RootSchema | undefined) {
     const codeList = [];
 
     for (const key in lifeCycles) {
+      // @ts-ignore
       codeList.push(createFunctionCode(key, lifeCycles[key]));
     }
 
@@ -74,6 +75,7 @@ function initMethodsCode(componentSchema: RootSchema | undefined) {
     const codeList = [];
 
     for (const key in methods) {
+        // @ts-ignore
       codeList.push(createFunctionCode(key, methods[key]));
     }
 
