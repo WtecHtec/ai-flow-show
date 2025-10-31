@@ -33,6 +33,7 @@ const EditorPage = () => {
             init(el, {
                 enableCondition: true,
                 enableCanvasLock: true,
+                appHelper,
             });
           
         }
@@ -41,7 +42,7 @@ const EditorPage = () => {
 
     }, [])
     return (
-        <div id="lce-container" className="w-full h-[100vh]"></div>
+        <div id="lce-container" className="w-full h-screen"></div>
     )
 }
 

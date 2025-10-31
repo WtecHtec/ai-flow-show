@@ -6,8 +6,8 @@ export default function App() {
 
   return (
     <main className="overflow-auto">
-      <EditorPage ></EditorPage>
-      {/* <PerViewPage ></PerViewPage> */}
+      {/* <EditorPage ></EditorPage> */}
+      <PerViewPage ></PerViewPage>
     </main>
   );
 }

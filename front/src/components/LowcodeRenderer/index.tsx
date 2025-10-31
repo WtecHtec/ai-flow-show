@@ -7,7 +7,7 @@ import { SchemaService } from '@/utils/schemaService';
 import appHelper from '@/utils/appHelper';
 import { RendererData, PackageInfo, LibraryMap, ComponentMapItem, ProjectSchema } from './types';
 import { defaultPackages } from './default';
-
+import assets from '@/views/editor/services/assets.json';
 interface LowcodeRendererProps {
     projectSchema?: ProjectSchema;
     scenarioName?: string;
@@ -32,7 +32,7 @@ const LowcodeRenderer: React.FC<LowcodeRendererProps> = ({
             const currentScenarioName = scenarioName || SchemaService.getScenarioNameFromUrl();
             const schemaService = new SchemaService(currentScenarioName);
 
-            const packages = defaultPackages;
+            const packages = [...defaultPackages, ...assets.packages];
           
 
             if (!projectSchema) {
