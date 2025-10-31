@@ -10,6 +10,7 @@ import SimulatorResizerPlugin from "@alilc/lowcode-plugin-simulator-select";
 import DataSourcePanePlugin from "@alilc/lowcode-plugin-datasource-pane";
 import PreviewSamplePlugin from "./plugins/plugin-preview-sample";
 import DefaultSettersRegistryPlugin from "./plugins/plugin-default-setters-registry";
+import SaveSamplePlugin from "./plugins/plugin-save-sample";
 
 const EditorPage = () => {
   async function registerPlugins() {
@@ -48,6 +49,9 @@ const EditorPage = () => {
 
     // 设置内置 setter 和事件绑定、插件绑定面板
     await plugins.register(DefaultSettersRegistryPlugin);
+
+    // 保存、重置
+    await plugins.register(SaveSamplePlugin);
   }
   useEffect(() => {
     const handle = async () => {
