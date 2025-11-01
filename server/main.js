@@ -15,17 +15,11 @@ const DATA_DIR = path.resolve(__dirname, "data");
 // ✅ 启动时确保 data 文件夹存在
 await fs.mkdir(DATA_DIR, { recursive: true });
 
-const allowedOrigins = ["http://localhost:8081", "http://localhost:5566"];
+const allowedOrigins = ["http://localhost:8080", "http://localhost:5566"];
 app.use(
   cors({
-    origin(origin, callback) {
-      if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error("Not allowed by CORS"));
-      }
-    },
-    credentials: true, // 允许跨域携带 cookie / 凭证
+    origin: allowedOrigins,
+    credentials: true,
   })
 );
 app.use(express.json());
@@ -38,9 +32,17 @@ app.post("/save", async (req, res) => {
       return res.status(400).json({ error: "Missing data or temp_id" });
     }
 
+    
+    let newData = data;
+    try {
+      newData = JSON.parse(newData);
+    } catch (err) {
+      console.error(err);
+    }
+    
     const json_id = nanoid(8);
     const filePath = path.join(DATA_DIR, `${json_id}.json`);
-    const content = { json_id, temp_id, data };
+    const content = { json_id, temp_id, data: newData };
 
     await fs.writeFile(filePath, JSON.stringify(content, null, 2), "utf-8");
 

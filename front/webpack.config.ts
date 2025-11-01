@@ -9,9 +9,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const config: Configuration = {
-  mode:
-    (process.env.NODE_ENV as "production" | "development" | undefined) ??
-    "development",
+  mode: "production",
   entry: "./src/main.tsx",
   module: {
     rules: [
@@ -68,6 +66,9 @@ const config: Configuration = {
       index: "/index.html",
       disableDotRule: true,
     },
+    // headers: {
+    //   'Access-Control-Allow-Origin': '*',
+    // },
   },
   resolve: {
     extensions: [".tsx", ".ts", ".js"],

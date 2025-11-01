@@ -32,7 +32,7 @@ const LowcodeRenderer: React.FC<LowcodeRendererProps> = ({
             const currentScenarioName = scenarioName || SchemaService.getScenarioNameFromUrl();
             const schemaService = new SchemaService(currentScenarioName);
 
-            const packages = [...defaultPackages, ...assets.packages];
+            const packages = [...assets.packages];
           
 
             if (!projectSchema) {
