@@ -1,0 +1,60 @@
+{
+  "name": "@wtechtec/lowcode-renderer",
+  "version": "0.0.1",
+  "type": "module",
+  "description": "完全独立的 Lowcode Renderer 组件（自带 React 17，完全隔离）",
+  "main": "dist/index.umd.js",
+  "module": "dist/index.esm.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "rollup -c",
+    "build:watch": "rollup -c -w",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "lowcode",
+    "renderer",
+    "react17",
+    "standalone",
+    "isolated"
+  ],
+  "author": "your-name",
+  "license": "MIT",
+  "dependencies": {
+    "@alilc/lowcode-datasource-fetch-handler": "^1.2.1",
+    "@alilc/lowcode-react-renderer": "^1.3.4",
+    "@alilc/lowcode-utils": "^1.3.4",
+    "lodash": "^4.17.21",
+    "react": "17.0.2",
+    "react-dom": "17.0.2"
+  },
+  "devDependencies": {
+    "@rollup/plugin-commonjs": "^25.0.7",
+    "@rollup/plugin-json": "^6.1.0",
+    "@rollup/plugin-node-resolve": "^15.2.3",
+    "@rollup/plugin-replace": "^5.0.5",
+    "@rollup/plugin-typescript": "^11.1.5",
+    "@types/lodash": "^4.17.20",
+    "@types/react": "^17.0.2",
+    "@types/react-dom": "^17.0.2",
+    "rollup": "^4.6.1",
+    "rollup-plugin-dts": "^6.1.0",
+    "typescript": "^4.9.4"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": false
+    },
+    "react-dom": {
+      "optional": false
+    }
+  },
+  "overrides": {
+    "react": "17.0.2",
+    "react-dom": "17.0.2"
+  }
+}

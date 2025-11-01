@@ -1,0 +1,12 @@
+src/
+*.ts
+!*.d.ts
+tsconfig.json
+rollup.config.js
+node_modules/
+.DS_Store
+*.log
+.eslintrc*
+.prettierrc*
+.git
+.gitignore
