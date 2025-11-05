@@ -92,6 +92,16 @@
       "version": "4.1.11",
       "urls": ["https://g.alicdn.com/code/lib/bizcharts/4.1.11/BizCharts.min.js"],
       "library": "BizCharts"
+    },
+    {
+      "title": "AiFlowElements",
+      "package": "ai-flow-elements",
+      "version": "0.0.1",
+      "urls": [
+        "https://cdn.jsdelivr.net/npm/ai-flow-elements@0.0.1/build/lowcode/view.js",
+        "https://cdn.jsdelivr.net/npm/ai-flow-elements@0.0.1/build/lowcode/view.css"
+      ],
+      "library": "BizComps"
     }
   ],
   "components": [
@@ -131,66 +141,14 @@
     },
 
     {
-      "title": "折线",
-      "category": "常用图表(试验)",
-      "componentName": "Line",
-      "icon": "https://unpkg.alibaba-inc.com/@ali/vc-bizcharts@1.1.4/src/vc-line/logo.svg",
+      "exportName": "AiFlowElementsMeta",
       "npm": {
-        "package": "@ant-design/charts",
-        "version": "4.0.14",
-        "exportName": "Line",
-        "main": "",
-        "destructuring": true,
-        "subName": ""
+        "package": "ai-flow-elements"
       },
-      "configure": {
-        "props": [
-          {
-            "name": "title",
-            "title": "标题",
-            "display": "inline",
-            "setter": "StringSetter",
-            "defaultValue": "2018年爆款商品A销售趋势",
-            "tip": "标题文本",
-            "supportVariable": true
-          },
-          {
-            "name": "description",
-            "title": "描述",
-            "display": "inline",
-            "setter": "StringSetter",
-            "defaultValue": "一达通进出口业务",
-            "tip": "描述文本",
-            "supportVariable": true
-          },
-          {
-            "name": "xField",
-            "title": "横坐标",
-            "display": "inline",
-            "setter": "StringSetter",
-            "defaultValue": "year",
-            "tip": "标题文本",
-            "supportVariable": true
-          },
-          {
-            "name": "yField",
-            "title": "纵坐标",
-            "display": "inline",
-            "setter": "StringSetter",
-            "defaultValue": "value",
-            "tip": "描述文本",
-            "supportVariable": true
-          },
-          {
-            "name": "data",
-            "title": "图表数据",
-            "tip": "配置图表数据",
-            "setter": "JsonSetter"
-          }
-        ],
-        "supports": {
-          "style": true
-        }
+      "url": "https://cdn.jsdelivr.net/npm/ai-flow-elements@0.0.1/build/lowcode/meta.js",
+      "urls": {
+        "default": "https://cdn.jsdelivr.net/npm/ai-flow-elements@0.0.1/build/lowcode/meta.js",
+        "design": "https://cdn.jsdelivr.net/npm/ai-flow-elements@0.0.1/build/lowcode/meta.js"
       }
     }
    
@@ -222,233 +180,6 @@
     "原子组件"
   ],
   "ignoreComponents": {},
-  "componentList": [  {
-    "title": "常用图表(试验)",
-    "icon": "",
-    "children": [
-      {
-        "componentName": "ColumnChart",
-        "library": "Next",
-        "title": "柱状图",
-        "icon": "",
-        "snippets": [
-          {
-            "title": "柱状图",
-            "componentName": "ColumnChart",
-            "screenshot": "https://gw.alipayobjects.com/mdn/rms_d314dd/afts/img/A*C554SqAGfuMAAAAAAAAAAABkARQnAQ",
-            "schema": {
-              "title": "柱状图",
-              "componentName": "ColumnChart",
-              "props": {
-                "title": "基础柱状图",
-                "isMaterial": true,
-                "autoFit": true,
-                "padding": "auto",
-                "xField": "type",
-                "yField": "sales",
-                "meta": {
-                  "type": {
-                    "alias": "类别"
-                  },
-                  "sales": {
-                    "alias": "销售额(万)"
-                  }
-                },
-                "data": [
-                  {
-                    "type": "家具家电",
-                    "sales": 38
-                  },
-                  {
-                    "type": "粮油副食",
-                    "sales": 52
-                  },
-                  {
-                    "type": "生鲜水果",
-                    "sales": 61
-                  },
-                  {
-                    "type": "美容洗护",
-                    "sales": 145
-                  },
-                  {
-                    "type": "母婴用品",
-                    "sales": 48
-                  },
-                  {
-                    "type": "进口食品",
-                    "sales": 38
-                  },
-                  {
-                    "type": "食品饮料",
-                    "sales": 38
-                  },
-                  {
-                    "type": "家庭清洁",
-                    "sales": 38
-                  }
-                ]
-              }
-            }
-          }
-        ]
-      },
-      {
-        "componentName": "LineChart",
-        "library": "Next",
-        "title": "折线图",
-        "icon": "",
-        "snippets": [
-          {
-            "title": "折线图",
-            "componentName": "LineChart",
-            "screenshot": "https://gw.alipayobjects.com/mdn/rms_d314dd/afts/img/A*YMGnQoh_jSAAAAAAAAAAAABkARQnAQ",
-            "schema": {
-              "title": "折线图",
-              "componentName": "LineChart",
-              "props": {
-                "title": "折线图标题",
-                "isMaterial": true,
-                "description": "折线图描述",
-                "xField": "year",
-                "yField": "value",
-                "renderer": "svg",
-                "data": [
-                  {
-                    "year": "1991",
-                    "value": 3
-                  },
-                  {
-                    "year": "1992",
-                    "value": 4
-                  },
-                  {
-                    "year": "1993",
-                    "value": 3.5
-                  },
-                  {
-                    "year": "1994",
-                    "value": 5
-                  },
-                  {
-                    "year": "1995",
-                    "value": 4.9
-                  },
-                  {
-                    "year": "1996",
-                    "value": 6
-                  },
-                  {
-                    "year": "1997",
-                    "value": 7
-                  },
-                  {
-                    "year": "1998",
-                    "value": 9
-                  },
-                  {
-                    "year": "1999",
-                    "value": 13
-                  }
-                ]
-              }
-            }
-          }
-        ]
-      },
-      {
-        "componentName": "LiquidChart",
-        "library": "Next",
-        "title": "水位图",
-        "icon": "",
-        "snippets": [
-          {
-            "title": "水位图",
-            "screenshot": "https://gw.alipayobjects.com/mdn/rms_d314dd/afts/img/A*DKvMTrrWdAQAAAAAAAAAAABkARQnAQ",
-            "schema": {
-              "title": "水位图",
-              "category": "常用图表(试验)",
-              "componentName": "LiquidChart",
-              "props": {
-                "title": "水位图标题",
-                "description": "水位图描述",
-                "isMaterial": true,
-                "outline": {
-                  "border": 2,
-                  "distance": 6
-                },
-                "min": 0,
-                "max": 100,
-                "value": 49
-              }
-            }
-          }
-        ]
-      },
-      {
-        "componentName": "PieChart",
-        "library": "Next",
-        "title": "饼图",
-        "icon": "",
-        "snippets": [
-          {
-            "title": "饼图",
-            "componentName": "PieChart",
-            "screenshot": "https://gw.alipayobjects.com/mdn/rms_d314dd/afts/img/A*93XzToUe1OQAAAAAAAAAAABkARQnAQ",
-            "schema": {
-              "title": "饼图",
-              "componentName": "PieChart",
-              "props": {
-                "isMaterial": true,
-                "title": {
-                  "visible": true,
-                  "text": "基础饼图"
-                },
-                "description": {
-                  "visible": true,
-                  "text": "基础饼图描述"
-                },
-                "meta": {
-                  "type": {
-                    "alias": "类别"
-                  },
-                  "sales": {
-                    "alias": "销售额(万)"
-                  }
-                },
-                "angleField": "value",
-                "colorField": "type",
-                "data": [
-                  {
-                    "type": "分类一",
-                    "value": 27
-                  },
-                  {
-                    "type": "分类二",
-                    "value": 25
-                  },
-                  {
-                    "type": "分类三",
-                    "value": 18
-                  },
-                  {
-                    "type": "分类四",
-                    "value": 15
-                  },
-                  {
-                    "type": "分类五",
-                    "value": 10
-                  },
-                  {
-                    "type": "其它",
-                    "value": 5
-                  }
-                ]
-              }
-            }
-          }
-        ]
-      }
-    ]
-  }]
+  "componentList": [
+  ]
 }
