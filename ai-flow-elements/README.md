@@ -1,17 +1,7 @@
 # ai-flow-elements
 
-一个面向 PC 的业务组件库
+用于低代码alibaba/lowcode-engine 的markdown 渲染组件
 
-## 调试
-启动调试
 
-```
-npm run lowcode:dev             # 打开开发环境，运行所有组件
-```
 
-构建
-
-```
-npm run lowcode:build
-```
-
+[代码编辑器插件 plugin-code-editor](https://github.com/WtecHtec/ai-flow-show/tree/main/front/src/views/editor/plugins/plugin-code-editor)

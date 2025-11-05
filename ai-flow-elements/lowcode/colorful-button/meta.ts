@@ -9,7 +9,7 @@ const ColorfulButtonMeta: IPublicTypeComponentMetadata = {
   "devMode": "proCode",
   "npm": {
     "package": "ai-flow-elements",
-    "version": "0.0.1",
+    "version": "0.0.3",
     "exportName": "ColorfulButton",
     "main": "src/index.tsx",
     "destructuring": true,

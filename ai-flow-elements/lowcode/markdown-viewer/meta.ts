@@ -3,13 +3,13 @@ import { IPublicTypeComponentMetadata, IPublicTypeSnippet } from '@alilc/lowcode
 
 const MarkdownViewerMeta: IPublicTypeComponentMetadata = {
   "componentName": "MarkdownViewer",
-  "title": "MarkdownViewer",
-  "docUrl": "",
-  "screenshot": "",
+  "title": "Markdown",
+  "docUrl": "https://youke1.picui.cn/s1/2025/11/05/690b5f61716d9.png",
+  "screenshot": "https://youke1.picui.cn/s1/2025/11/05/690b5f61716d9.png",
   "devMode": "proCode",
   "npm": {
     "package": "ai-flow-elements",
-    "version": "0.0.1",
+    "version": "0.0.3",
     "exportName": "MarkdownViewer",
     "main": "src/index.tsx",
     "destructuring": true,

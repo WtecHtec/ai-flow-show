@@ -96,10 +96,10 @@
     {
       "title": "AiFlowElements",
       "package": "ai-flow-elements",
-      "version": "0.0.1",
+      "version": "0.0.2",
       "urls": [
-        "https://cdn.jsdelivr.net/npm/ai-flow-elements@0.0.1/build/lowcode/view.js",
-        "https://cdn.jsdelivr.net/npm/ai-flow-elements@0.0.1/build/lowcode/view.css"
+        "https://cdn.jsdelivr.net/npm/ai-flow-elements@0.0.2/build/lowcode/view.js",
+        "https://cdn.jsdelivr.net/npm/ai-flow-elements@0.0.2/build/lowcode/view.css"
       ],
       "library": "BizComps"
     }
@@ -145,10 +145,10 @@
       "npm": {
         "package": "ai-flow-elements"
       },
-      "url": "https://cdn.jsdelivr.net/npm/ai-flow-elements@0.0.1/build/lowcode/meta.js",
+      "url": "https://cdn.jsdelivr.net/npm/ai-flow-elements@0.0.2/build/lowcode/meta.js",
       "urls": {
-        "default": "https://cdn.jsdelivr.net/npm/ai-flow-elements@0.0.1/build/lowcode/meta.js",
-        "design": "https://cdn.jsdelivr.net/npm/ai-flow-elements@0.0.1/build/lowcode/meta.js"
+        "default": "https://cdn.jsdelivr.net/npm/ai-flow-elements@0.0.2/build/lowcode/meta.js",
+        "design": "https://cdn.jsdelivr.net/npm/ai-flow-elements@0.0.2/build/lowcode/meta.js"
       }
     }
    

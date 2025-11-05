@@ -1,6 +1,6 @@
 {
   "name": "ai-flow-elements",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "ai-flow-elements",
   "main": "lib/index.js",
   "module": "es/index.js",
@@ -104,10 +104,10 @@
   },
   "componentConfig": {
     "isComponentLibrary": true,
-    "materialSchema": "https://unpkg.com/ai-flow-elements@0.0.1/build/lowcode/assets-prod.json"
+    "materialSchema": "https://unpkg.com/ai-flow-elements@0.0.2/build/lowcode/assets-prod.json"
   },
   "lcMeta": {
     "type": "component"
   },
-  "homepage": "https://unpkg.com/ai-flow-elements@0.0.1/build/index.html"
+  "homepage": "https://unpkg.com/ai-flow-elements@0.1.0/build/index.html"
 }
