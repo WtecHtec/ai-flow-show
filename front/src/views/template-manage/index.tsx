@@ -140,13 +140,13 @@ const TemplateManagePage = () => {
       width: 200,
       render: (_, record) => (
         <Space size="middle">
-          <Button
+          {/* <Button
             type="link"
             icon={<EyeOutlined />}
             onClick={() => handleView(record.temp_id)}
           >
             查看
-          </Button>
+          </Button> */}
           <Button
             type="link"
             icon={<EditOutlined />}

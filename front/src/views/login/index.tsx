@@ -15,7 +15,7 @@ const LoginPage = () => {
       const res = await http.post('/api/auth/login', values) as any;
       setToken(res.token);
       message.success('登录成功');
-      navigate('/editor');
+      navigate('/templates');
     } catch (error: any) {
       message.error(error.response?.data?.error || '登录失败');
     } finally {
