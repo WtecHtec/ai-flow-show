@@ -494,10 +494,17 @@ app.post("/api/instances", async (req, res) => {
 
      // 生成 UUID
      const instanceId = nanoid(8);
+
+     let data_source_json_resut = ""
+     if (typeof data_source_json === 'object') {
+      data_source_json_resut = JSON.stringify(data_source_json)
+     } else {
+      data_source_json_resut = data_source_json
+     }
     // 创建实例
     await pool.execute(
       "INSERT INTO instances (id, temp_id, data_source_json) VALUES (?, ?, ?)",
-      [instanceId, temp_id, JSON.stringify(data_source_json)]
+      [instanceId, temp_id, JSON.stringify(data_source_json_resut)]
     );
 
     const viewUrl = process.env.BASE_URL + `/#/view/${instanceId}`;

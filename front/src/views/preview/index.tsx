@@ -5,11 +5,11 @@ import { getProjectSchemaFromLocalStorage } from "../editor/services/mockService
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { apiGetTempByJsonId } from "../editor/api";
-import { message } from "antd";
+import { message, Result } from "antd";
 const getScenarioName = function () {
-  if (location.hash) {
+  if (location.search) {
     return (
-      new URLSearchParams(location.hash.split('?')[1]).get("scenarioName")
+      new URLSearchParams(location.search.slice(1)).get("scenarioName")
     );
   }
   return "";
@@ -39,7 +39,11 @@ const PerViewPage: React.FC = () => {
   }, [scenarioName, id]);
 
   if (!projectSchema) {
-    return <div>暂无数据</div>;
+    return   <Result
+    status="404"
+    title="404"
+    subTitle="没找到相关数据"
+  />;
   }
 
   return <LowcodeRenderer projectSchema={projectSchema}></LowcodeRenderer>;

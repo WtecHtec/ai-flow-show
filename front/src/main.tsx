@@ -15,9 +15,9 @@ const rootElement = document.getElementById("root");
 // New as of React17
 ReactDOM.render(
   <StrictMode>
-    <HashRouter>
+    <BrowserRouter>
       <App />
-    </HashRouter>
+    </BrowserRouter>
   </StrictMode>,
   rootElement
 )
