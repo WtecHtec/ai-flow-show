@@ -6,11 +6,12 @@ import {
 } from '../../services/mockService';
 
 // 保存功能示例
-const SaveSamplePlugin = (ctx: IPublicModelPluginContext) => {
+const SaveSamplePlugin = (ctx: IPublicModelPluginContext, options?: any) => {
   return {
     async init() {
       const { skeleton, hotkey, config } = ctx;
       const scenarioName = config.get('scenarioName');
+      const tempId = options?.tempId || config.get('tempId'); // 获取模板ID
 
       skeleton.add({
         name: 'saveSample',
@@ -20,7 +21,7 @@ const SaveSamplePlugin = (ctx: IPublicModelPluginContext) => {
           align: 'right',
         },
         content: (
-          <Button onClick={() => saveSchema(scenarioName, 'save')}>
+          <Button onClick={() => saveSchema(scenarioName, 'save', tempId)}>
             保存
           </Button>
         ),
@@ -38,9 +39,26 @@ const SaveSamplePlugin = (ctx: IPublicModelPluginContext) => {
           </Button>
         ),
       });
+
+      skeleton.add({
+        name: 'backToTemplateManage',
+        area: 'topArea',
+        type: 'Widget',
+        props: {
+          align: 'right',
+        },
+        content: (
+          <Button onClick={() => {
+             window.location.href = '/#/templates';
+          }}>
+            返回模板管理
+          </Button>
+        ),
+      });
+      
       hotkey.bind('command+s', (e) => {
         e.preventDefault();
-        saveSchema(scenarioName);
+        saveSchema(scenarioName, 'save', tempId);
       });
     },
   };

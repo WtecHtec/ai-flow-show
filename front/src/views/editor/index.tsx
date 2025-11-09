@@ -1,5 +1,6 @@
 import { init, plugins } from "@alilc/lowcode-engine";
-import { useEffect, useLayoutEffect } from "react";
+import { useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import InjectPlugin from "@alilc/lowcode-plugin-inject";
 import ComponentPanelPlugin from "@alilc/lowcode-plugin-components-pane";
 import EditorInitPlugin from "./plugins/plugin-editor-init";
@@ -13,7 +14,11 @@ import DefaultSettersRegistryPlugin from "./plugins/plugin-default-setters-regis
 import SaveSamplePlugin from "./plugins/plugin-save-sample";
 import CodeEditorPlugin from './plugins/plugin-code-editor'
 
+let hasRegisterPlugins = false;
 const EditorPage = () => {
+  const [searchParams] = useSearchParams();
+  const tempId = searchParams.get('temp_id');
+
   async function registerPlugins() {
     await plugins.register(InjectPlugin);
 
@@ -22,6 +27,7 @@ const EditorPage = () => {
       scenarioName: "ai_flow_view",
       displayName: "AI Flow View",
       info: {},
+      tempId: tempId, // 传递模板ID
     });
     // 物料
     await plugins.register(ComponentPanelPlugin);
@@ -52,13 +58,21 @@ const EditorPage = () => {
     await plugins.register(DefaultSettersRegistryPlugin);
 
     // 保存、重置
-    await plugins.register(SaveSamplePlugin);
+    await plugins.register(SaveSamplePlugin, {
+      tempId: tempId, // 传递模板ID
+    });
 
     await plugins.register(CodeEditorPlugin)
   }
+  
   useEffect(() => {
     const handle = async () => {
+      if (!hasRegisterPlugins) {
+       
+      }
       await registerPlugins();
+      hasRegisterPlugins = true;
+     
 
       const el = document.getElementById("lce-container") || document.body;
       init(el, {
@@ -78,7 +92,8 @@ const EditorPage = () => {
     };
 
     handle();
-  }, []);
+  }, [tempId]); // 依赖 tempId
+
   return (
     <div
       id="lce-container"

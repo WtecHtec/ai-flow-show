@@ -5,11 +5,11 @@ import { getProjectSchemaFromLocalStorage } from "../editor/services/mockService
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { apiGetTempByJsonId } from "../editor/api";
+import { message } from "antd";
 const getScenarioName = function () {
-  if (location.search) {
+  if (location.hash) {
     return (
-      new URLSearchParams(location.search.slice(1)).get("scenarioName") ||
-      "general"
+      new URLSearchParams(location.hash.split('?')[1]).get("scenarioName")
     );
   }
   return "";
@@ -22,7 +22,12 @@ const PerViewPage: React.FC = () => {
   useEffect(() => {
     const handle = async (id: any) => {
        const data =  await apiGetTempByJsonId(id) as any
-       setProjectSchema({ ...data });
+       if (data?.template?.schema_data) {
+        setProjectSchema({ ...(data?.template?.schema_data) });
+       } else {
+         message.error('获取模板失败');
+       }
+       
     }
     if (scenarioName) {
         const projectSchema = getProjectSchemaFromLocalStorage(scenarioName);

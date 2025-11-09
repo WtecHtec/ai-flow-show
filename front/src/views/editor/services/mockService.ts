@@ -4,7 +4,7 @@ import { Message, Dialog } from '@alifd/next';
 import { IPublicTypeProjectSchema, IPublicEnumTransformStage } from '@alilc/lowcode-types';
 import DefaultPageSchema from './defaultPageSchema.json';
 import DefaultI18nSchema from './defaultI18nSchema.json';
-import { apiSaveTemp } from '../api';
+import { apiSaveTemp, apiUpdateTemplate } from '../api';
 
 const generateProjectSchema = (pageSchema: any, i18nSchema: any): IPublicTypeProjectSchema => {
   return {
@@ -16,13 +16,35 @@ const generateProjectSchema = (pageSchema: any, i18nSchema: any): IPublicTypePro
 }
 
 
-export const saveSchema = async (scenarioName: string = 'unknown', type: "save" | "perview" = 'perview') => {
+// 保存 schema，支持模板ID
+export const saveSchema = async (
+  scenarioName: string = 'unknown', 
+  type: "save" | "perview" = 'perview',
+  tempId?: string // 可选的模板ID
+) => {
   setProjectSchemaToLocalStorage(scenarioName);
   await setPackagesToLocalStorage(scenarioName);
+  
   if (type === 'save') {
-    await apiSaveTemp(project.exportSchema(IPublicEnumTransformStage.Save))
+    const schema = project.exportSchema(IPublicEnumTransformStage.Save);
+    
+    if (tempId) {
+      // 如果有模板ID，更新模板
+      try {
+        await apiUpdateTemplate(tempId, {
+          schema_data: schema
+        });
+        Message.success('模板更新成功');
+      } catch (error: any) {
+        Message.error(error.response?.data?.error || '模板更新失败');
+        throw error;
+      }
+    } else {
+      // 没有模板ID，使用旧的保存方式
+      await apiSaveTemp(schema);
+      Message.success('成功保存');
+    }
   }
-  Message.success('成功保存');
 };
 
 export const resetSchema = async (scenarioName: string = 'unknown') => {

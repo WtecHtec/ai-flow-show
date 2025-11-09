@@ -2,3 +2,22 @@ node_modules
 dist
 data
 .DS_Store
+
+# 环境变量文件
+.env
+.env.local
+.env.*.local
+
+# 依赖
+node_modules/
+
+# 数据目录
+data/
+
+# 日志
+*.log
+npm-debug.log*
+
+# 系统文件
+.DS_Store
+Thumbs.db
