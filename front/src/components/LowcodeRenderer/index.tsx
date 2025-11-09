@@ -132,7 +132,7 @@ const LowcodeRenderer: React.FC<LowcodeRendererProps> = ({
     const currentLocale = schemaService.getPreviewLocale();
 
     return (
-        <div className={className}>
+        <div className={className} style={{ width: '100%', height: '100vh' }}>
             <ReactRenderer
                 className="lowcode-renderer-content"
                 schema={{

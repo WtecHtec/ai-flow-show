@@ -507,7 +507,7 @@ app.post("/api/instances", async (req, res) => {
       [instanceId, temp_id, JSON.stringify(data_source_json_resut)]
     );
 
-    const viewUrl = process.env.BASE_URL + `/#/view/${instanceId}`;
+    const viewUrl = process.env.BASE_URL + `/view/${instanceId}`;
 
     res.json({
       message: "实例创建成功",
