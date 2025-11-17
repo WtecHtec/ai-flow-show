@@ -2,12 +2,13 @@ import { lazy, Suspense } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import ProtectedRoute from "@/components/ProtectedRoute";
 
+
 const PerViewPage = lazy(() => import("@/views/preview"));
 const EditorPage = lazy(() => import("@/views/editor"));
 const LoginPage = lazy(() => import("@/views/login"));
 const RegisterPage = lazy(() => import("@/views/register"));
 const TemplateManagePage = lazy(() => import("@/views/template-manage"));
-
+const SleepHelperPage = lazy(() => import("@/views/sleep-helper"));
 export default function App() {
   return (
     <main className="overflow-auto">
@@ -34,6 +35,9 @@ export default function App() {
               </ProtectedRoute>
             }
           />
+          <Route path="/sleep" element={
+            <SleepHelperPage/>
+          } ></Route>
           <Route path="*" element={<div>Not Found</div>} />
         </Routes>
       </Suspense>

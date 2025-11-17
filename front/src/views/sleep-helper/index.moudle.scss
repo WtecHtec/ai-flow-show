@@ -1,0 +1,11 @@
+@media (max-width: 640px) {
+    :global(.mobile-modal .ant-modal) {
+      margin: 0;
+      max-width: 100%;
+      top: 0;
+      padding-bottom: 0;
+    }
+    :global(.mobile-modal .ant-modal-content) {
+      border-radius: 16px 16px 0 0;
+    }
+  }
