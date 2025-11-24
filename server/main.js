@@ -56,7 +56,7 @@ const authenticateToken = (req, res, next) => {
 app.post("/api/auth/register", async (req, res) => {
   try {
     const { username, email, password } = req.body;
-    
+
     if (!username || !email || !password) {
       return res.status(400).json({ error: "用户名、邮箱和密码不能为空" });
     }
@@ -104,7 +104,7 @@ app.post("/api/auth/register", async (req, res) => {
 app.post("/api/auth/login", async (req, res) => {
   try {
     const { username, password } = req.body;
-    
+
     if (!username || !password) {
       return res.status(400).json({ error: "用户名和密码不能为空" });
     }
@@ -185,7 +185,7 @@ app.get("/api/templates", authenticateToken, async (req, res) => {
 app.get("/api/templates/:temp_id", authenticateToken, async (req, res) => {
   try {
     const { temp_id } = req.params;
-    
+
     const [templates] = await pool.execute(
       "SELECT * FROM templates WHERE temp_id = ? AND user_id = ?",
       [temp_id, req.user.userId]
@@ -210,7 +210,7 @@ app.get("/api/templates/:temp_id", authenticateToken, async (req, res) => {
 app.post("/api/templates", authenticateToken, async (req, res) => {
   try {
     const { name, description, schema_data } = req.body;
-    
+
     if (!name || !schema_data) {
       return res.status(400).json({ error: "模板名称和 schema 数据不能为空" });
     }
@@ -305,7 +305,7 @@ app.get("/api/data-sources", authenticateToken, async (req, res) => {
 app.post("/api/data-sources", authenticateToken, async (req, res) => {
   try {
     const { name, type, config } = req.body;
-    
+
     if (!name || !type || !config) {
       return res.status(400).json({ error: "名称、类型和配置不能为空" });
     }
@@ -381,7 +381,7 @@ app.post("/save", async (req, res) => {
     } catch (err) {
       console.error(err);
     }
-    
+
     const json_id = nanoid(8);
     const filePath = path.join(DATA_DIR, `${json_id}.json`);
     const content = { json_id, temp_id, data: newData };
@@ -419,7 +419,7 @@ app.get("/temp/:json_id", async (req, res) => {
     const json = JSON.parse(fileData);
     const files = await fs.readdir(DATA_DIR);
 
-    const temp_id =  json.temp_id
+    const temp_id = json.temp_id
     const tempFilePath = path.join(DATA_DIR, `${temp_id}.json`);
     const content = JSON.parse(await fs.readFile(tempFilePath, "utf-8"));
     if (content) {
@@ -477,7 +477,7 @@ app.post("/save_temp", async (req, res) => {
 app.post("/api/instances", async (req, res) => {
   try {
     const { temp_id, data_source_json } = req.body;
-    
+
     if (!temp_id || !data_source_json) {
       return res.status(400).json({ error: "模板ID和数据源JSON不能为空" });
     }
@@ -492,20 +492,20 @@ app.post("/api/instances", async (req, res) => {
       return res.status(404).json({ error: "模板不存在" });
     }
 
-     // 生成 UUID
-     const instanceId = nanoid(8);
+    // 生成 UUID
+    const instanceId = nanoid(8);
 
-     let data_source_json_resut = ""
-     if (typeof data_source_json === 'object') {
+    let data_source_json_resut = ""
+    if (typeof data_source_json === 'object') {
       data_source_json_resut = data_source_json
-     } else {
+    } else {
       try {
         data_source_json_resut = JSON.parse(data_source_json)
-      }  catch (error) {
+      } catch (error) {
         data_source_json_resut = data_source_json
       }
-     
-     }
+
+    }
     // 创建实例
     await pool.execute(
       "INSERT INTO instances (id, temp_id, data_source_json) VALUES (?, ?, ?)",
@@ -591,6 +591,12 @@ app.get("/api/instances/data-source/:id", async (req, res) => {
 
 // 静态文件
 app.use(express.static(path.join(__dirname, 'dist')));
+
+
+// 拍立得
+app.get("/apps/palid", async (req, res) => {
+  res.sendFile(path.join(__dirname, 'apps/palid/index.html'));
+});
 
 // ✅ 兜底路由
 app.use((req, res) => {

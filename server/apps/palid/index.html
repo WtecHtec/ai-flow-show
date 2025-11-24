@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Summer Breeze Instax | 在线复古拍立得相机</title>
+    <meta name="description" content="免费在线复古拍立得相机模拟器。体验夏日微风主题，实时滤镜，AI心情语录，一键生成并保存你的拍立得照片。无需下载，打开即用。" />
+    <meta name="keywords" content="在线拍立得, Instax模拟器, 复古相机网页版, React相机应用, 夏日滤镜, 虚拟拍立得, 网页照相馆" />
+
+
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://xujingyichang.top/" />
+    <meta property="og:title" content="Summer Breeze Instax | 捕捉你的夏日瞬间" />
+    <meta property="og:description" content="超逼真的网页版Instax相机，带有夏日微风特效和机械快门体验。快来拍一张！" />
+    <meta property="og:image" content="https://your-domain.com/social-share-preview.jpg" />
+
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Summer Breeze Instax" />
+    <meta name="twitter:description" content="Web上的复古拍立得体验。" />
+    <meta name="twitter:image" content="https://your-domain.com/social-share-preview.jpg" />
+
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="theme-color" content="#87CEEB" />
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2463152068592975"
+        crossOrigin="anonymous" />
+
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1234567890123456"
+        crossorigin="anonymous"></script>
+
+
+    <script src="https://cdn.tailwindcss.com/3.3.6"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+    <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600&family=Montserrat:wght@600;800&display=swap"
+        rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'summer-blue': '#AEEEEE',
+                        'summer-yellow': '#FFD700',
+                        'polaroid-white': '#ffffff',
+                    },
+                    fontFamily: {
+                        'hand': ['Caveat', 'cursive'],
+                        'meta': ['Montserrat', 'sans-serif'],
+                    },
+                    borderRadius: { 'camera': '48px' },
+                    boxShadow: {
+                        'plastic': 'inset 0 2px 4px rgba(255,255,255,0.7), inset 0 -6px 12px rgba(0,0,0,0.1), 0 20px 40px -10px rgba(0,0,0,0.25)',
+                        'lens': 'inset 0 0 30px rgba(0,0,0,0.7), 0 8px 15px rgba(0,0,0,0.2)',
+                        'button': '0 6px 0 #e5e7eb, 0 10px 15px rgba(0,0,0,0.15), inset 0 2px 4px rgba(255,255,255,0.8)',
+                        'button-pressed': '0 0 0 #e5e7eb, 0 2px 4px rgba(0,0,0,0.1), inset 0 4px 8px rgba(0,0,0,0.1)',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            touch-action: none;
+            overflow: hidden;
+            background: linear-gradient(180deg, #89CFF0 0%, #E0F2F1 100%);
+        }
+
+        .video-mirror {
+            transform: scaleX(-1);
+        }
+
+        /* 前置镜像 */
+        .video-normal {
+            transform: scaleX(1);
+        }
+
+        /* 后置正常 */
+
+        .textured-plastic {
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.5' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E");
+        }
+
+        /* 动画 */
+        @keyframes float-in-breeze {
+
+            0%,
+            100% {
+                transform: translate(0, 0) rotate(var(--rot));
+            }
+
+            33% {
+                transform: translate(2px, -3px) rotate(calc(var(--rot) + 0.5deg));
+            }
+
+            66% {
+                transform: translate(-1px, 2px) rotate(calc(var(--rot) - 0.3deg));
+            }
+        }
+
+        @keyframes flash-anim {
+            0% {
+                opacity: 0;
+            }
+
+            10% {
+                opacity: 1;
+                background: white;
+            }
+
+            100% {
+                opacity: 0;
+            }
+        }
+
+        @keyframes shutter-close {
+            0% {
+                transform: scale(1.5);
+                opacity: 0;
+            }
+
+            40% {
+                transform: scale(0.1);
+                opacity: 1;
+                background: #111;
+            }
+
+            60% {
+                transform: scale(0.1);
+                opacity: 1;
+                background: #111;
+            }
+
+            100% {
+                transform: scale(1.5);
+                opacity: 0;
+            }
+        }
+
+        @keyframes number-pop {
+            0% {
+                transform: scale(0.5);
+                opacity: 0;
+            }
+
+            60% {
+                transform: scale(1.2);
+                opacity: 1;
+            }
+
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .pop-anim {
+            animation: number-pop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+        }
+
+        /* 状态类 */
+        .polaroid-card.developed:not(.dragging) {
+            animation: float-in-breeze 5s ease-in-out infinite;
+        }
+
+        .polaroid-card.dragging {
+            cursor: grabbing;
+            transition: none !important;
+            z-index: 9999 !important;
+            box-shadow: 0 35px 60px -15px rgba(0, 0, 0, 0.3);
+            animation: none;
+        }
+
+        .flash-overlay {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 200;
+            animation: flash-anim 0.5s ease-out forwards;
+        }
+
+        .shutter-overlay {
+            position: absolute;
+            inset: 0;
+            border-radius: 50%;
+            z-index: 20;
+            pointer-events: none;
+            opacity: 0;
+        }
+
+        .shutter-active {
+            animation: shutter-close 0.4s ease-in-out forwards;
+        }
+
+        .decoration-sticker {
+            position: absolute;
+            pointer-events: none;
+            filter: drop-shadow(1px 2px 1px rgba(0, 0, 0, 0.1));
+            z-index: 10;
+            opacity: 0.95;
+        }
+
+        .save-btn {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .save-btn:active {
+            transform: scale(0.9);
+        }
+    </style>
+</head>
+
+<body class="h-screen w-screen relative overflow-hidden">
+
+    <div id="photo-wall" class="absolute inset-0 z-0 pointer-events-none"></div>
+    <div id="flash-container"></div>
+
+    <div id="camera-assembly"
+        class="fixed bottom-8 left-1/2 -translate-x-1/2 w-[360px] h-[320px] z-50 pointer-events-none select-none">
+
+        <div
+            class="pointer-events-auto absolute bottom-0 w-full h-[280px] bg-summer-blue rounded-camera shadow-plastic border-[4px] border-white/40 z-10 overflow-hidden textured-plastic">
+
+            <div
+                class="absolute top-0 right-0 w-1/3 h-full bg-gradient-to-l from-black/5 to-transparent pointer-events-none">
+            </div>
+
+            <div class="absolute top-6 right-8 flex items-center gap-3">
+                <div class="flex flex-col gap-2">
+                    <div class="w-2 h-2 bg-black/80 rounded-full shadow-inner border border-white/20"></div>
+                    <div class="w-2 h-2 bg-black/80 rounded-full shadow-inner border border-white/20"></div>
+                </div>
+                <div
+                    class="w-14 h-8 bg-gray-200 rounded-lg border-2 border-gray-300 shadow-inner relative overflow-hidden">
+                    <div class="absolute inset-0 bg-white/60 skew-x-12 -translate-x-2 w-full h-full"></div>
+                </div>
+            </div>
+
+            <div
+                class="absolute top-7 left-10 w-8 h-8 bg-[#222] rounded-lg border-[3px] border-white shadow-md overflow-hidden">
+                <div class="w-full h-full bg-gradient-to-br from-[#111] to-[#555] opacity-80"></div>
+            </div>
+
+            <div class="absolute top-[70px] left-1/2 -translate-x-1/2">
+                <div
+                    class="w-44 h-44 bg-white rounded-full shadow-lg flex items-center justify-center border border-gray-100">
+                    <div
+                        class="w-36 h-36 bg-gradient-to-b from-gray-50 to-gray-200 rounded-full flex items-center justify-center border border-gray-300 shadow-[inset_0_2px_6px_rgba(0,0,0,0.1)]">
+                        <div
+                            class="relative w-28 h-28 bg-black rounded-full border-[6px] border-[#222] shadow-lens overflow-hidden group">
+
+                            <video id="camera-feed" autoplay playsinline
+                                class="w-full h-full object-cover video-normal opacity-90 transition-opacity"></video>
+
+                            <div id="lens-shutter" class="shutter-overlay"></div>
+
+                            <div
+                                class="absolute top-4 left-5 w-8 h-4 bg-white/10 rounded-full blur-[2px] rotate-[-25deg] pointer-events-none">
+                            </div>
+
+                            <div id="countdown-overlay"
+                                class="hidden absolute inset-0 bg-[radial-gradient(circle,rgba(0,0,0,0)_20%,rgba(0,0,0,0.8)_100%)] flex items-center justify-center z-30">
+                                <span id="countdown-text"
+                                    class="text-white text-6xl font-meta font-extrabold drop-shadow-md"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <button id="flip-btn" onclick="switchCamera()"
+                    class="pointer-events-auto absolute -bottom-2 left-0 w-10 h-10 bg-white rounded-full shadow-md border border-gray-200 flex items-center justify-center text-gray-600 hover:bg-gray-50 active:scale-90 transition-transform z-40"
+                    title="切换镜头">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2"
+                        stroke="currentColor" class="w-6 h-6">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
+                    </svg>
+                </button>
+            </div>
+
+            <div class="absolute top-[120px] right-[20px]">
+                <button id="shutter-btn" onclick="startSequence()"
+                    class="pointer-events-auto w-14 h-14 bg-white rounded-full border-4 border-gray-100 shadow-button active:shadow-button-pressed active:translate-y-[6px] transition-all group relative overflow-hidden">
+                    <div
+                        class="absolute inset-2 bg-gradient-to-b from-gray-50 to-gray-200 rounded-full shadow-[inset_0_2px_4px_rgba(255,255,255,1)] group-active:bg-gray-200">
+                    </div>
+                </button>
+            </div>
+
+            <div
+                class="absolute bottom-5 left-1/2 -translate-x-1/2 font-meta font-bold text-white/60 text-[10px] tracking-[0.3em]">
+                INSTAX MINI S</div>
+        </div>
+
+        <div id="paper-slot"
+            class="absolute top-0 left-1/2 -translate-x-1/2 w-60 h-3 bg-[#222] rounded-full z-5 border-b border-white/20 shadow-lg">
+        </div>
+    </div>
+
+    <script>
+        const video = document.getElementById('camera-feed');
+        const paperSlot = document.getElementById('paper-slot');
+        const countdownOverlay = document.getElementById('countdown-overlay');
+        const countdownText = document.getElementById('countdown-text');
+        const lensShutter = document.getElementById('lens-shutter');
+        const flashContainer = document.getElementById('flash-container');
+        const shutterBtn = document.getElementById('shutter-btn');
+        const flipBtn = document.getElementById('flip-btn');
+
+        let zIndexCounter = 1000;
+        let isCapturing = false;
+        let currentStream = null;
+        // 默认使用 environment (后置)，如果用户在PC端可能自动回退到 user
+        let facingMode = "environment";
+
+        // 1. 初始化摄像头
+        async function initCamera() {
+            // 停止之前的流 (切换摄像头必须步骤)
+            if (currentStream) {
+                currentStream.getTracks().forEach(track => track.stop());
+            }
+
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    video: {
+                        facingMode: facingMode,
+                        width: { ideal: 1080 },
+                        height: { ideal: 1080 }
+                    }
+                });
+                currentStream = stream;
+                video.srcObject = stream;
+
+                // 关键优化：根据摄像头类型调整镜像
+                // 后置(environment) -> 不镜像 (video-normal)
+                // 前置(user) -> 镜像 (video-mirror)
+                if (facingMode === 'user') {
+                    video.classList.remove('video-normal');
+                    video.classList.add('video-mirror');
+                } else {
+                    video.classList.remove('video-mirror');
+                    video.classList.add('video-normal');
+                }
+
+            } catch (err) {
+                console.error(err);
+                // 如果请求后置失败(例如笔记本)，尝试回退到默认
+                if (facingMode === 'environment') {
+                    console.log("后置调用失败，尝试默认...");
+                    facingMode = 'user';
+                    initCamera();
+                } else {
+                    alert("无法访问摄像头，请确保在 HTTPS 环境下运行或允许权限 📷");
+                }
+            }
+        }
+
+        // 启动
+        initCamera();
+
+        // 2. 切换摄像头函数
+        function switchCamera() {
+            if (isCapturing) return;
+            // 翻转模式
+            facingMode = facingMode === 'user' ? 'environment' : 'user';
+
+            // 添加按钮旋转动画反馈
+            flipBtn.querySelector('svg').style.transition = 'transform 0.5s';
+            flipBtn.querySelector('svg').style.transform = `rotate(${facingMode === 'user' ? 180 : 0}deg)`;
+
+            initCamera();
+        }
+
+        // 3. 拍照流程 (包含倒计时)
+        function startSequence() {
+            if (isCapturing) return;
+            isCapturing = true;
+            shutterBtn.disabled = true;
+            flipBtn.disabled = true; // 拍照时禁止切换
+
+            let count = 3;
+            updateCountdown(count);
+            countdownOverlay.classList.remove('hidden');
+
+            const timer = setInterval(() => {
+                count--;
+                if (count > 0) {
+                    updateCountdown(count);
+                } else {
+                    clearInterval(timer);
+                    countdownOverlay.classList.add('hidden');
+                    triggerShutterEffect();
+                }
+            }, 1000);
+        }
+
+        function updateCountdown(num) {
+            countdownText.innerText = num;
+            countdownText.classList.remove('pop-anim');
+            void countdownText.offsetWidth;
+            countdownText.classList.add('pop-anim');
+        }
+
+        // 4. 快门特效
+        function triggerShutterEffect() {
+            lensShutter.classList.add('shutter-active');
+            setTimeout(() => {
+                const flash = document.createElement('div');
+                flash.className = 'flash-overlay';
+                flashContainer.appendChild(flash);
+                setTimeout(() => flash.remove(), 500);
+
+                captureFrame();
+
+                setTimeout(() => {
+                    lensShutter.classList.remove('shutter-active');
+                    isCapturing = false;
+                    shutterBtn.disabled = false;
+                    flipBtn.disabled = false;
+                }, 400);
+            }, 200);
+        }
+
+        // 5. 截图处理 (处理镜像问题)
+        function captureFrame() {
+            const canvas = document.createElement('canvas');
+            const size = Math.min(video.videoWidth, video.videoHeight) || 640;
+            canvas.width = size; canvas.height = size;
+            const ctx = canvas.getContext('2d');
+
+            // 这里的逻辑需要跟 CSS 的 transform 保持一致
+            if (facingMode === 'user') {
+                // 前置：需要镜像翻转回来
+                ctx.translate(size, 0);
+                ctx.scale(-1, 1);
+            } else {
+                // 后置：正常绘制
+                ctx.translate(0, 0);
+                ctx.scale(1, 1);
+            }
+
+            // 计算居中裁剪
+            const startX = (video.videoWidth - size) / 2;
+            const startY = (video.videoHeight - size) / 2;
+            ctx.drawImage(video, startX, startY, size, size, 0, 0, size, size);
+
+            generatePolaroid(canvas.toDataURL('image/jpeg', 0.95));
+        }
+
+        // 6. 生成相纸 (保持之前的逻辑)
+        function generatePolaroid(imgData) {
+            const slotRect = paperSlot.getBoundingClientRect();
+            const card = document.createElement('div');
+            card.className = "polaroid-card group absolute w-56 p-3 pb-6 bg-polaroid-white shadow-2xl flex flex-col items-center rounded overflow-hidden cursor-grab";
+
+            card.style.left = `${slotRect.left + slotRect.width / 2 - 112}px`;
+            card.style.top = `${slotRect.top}px`;
+            card.style.transform = `scale(0.8)`;
+            card.style.zIndex = 40;
+            card.style.opacity = 0;
+            card.style.transition = "transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275), top 0.6s ease-out, opacity 0.2s";
+
+            const img = document.createElement('img');
+            img.src = imgData;
+            img.className = "w-full h-48 object-cover bg-[#111] rounded-sm filter grayscale blur-[2px] contrast-125 brightness-75 transition-all duration-[5000ms] ease-out pointer-events-none border border-gray-100";
+
+            const textDiv = document.createElement('div');
+            textDiv.className = "mt-4 font-hand text-gray-700 text-xl text-center w-full min-h-[1.5em] px-1 z-20 relative leading-none";
+            textDiv.innerText = "...";
+            textDiv.onmousedown = (e) => e.stopPropagation();
+            textDiv.ontouchstart = (e) => e.stopPropagation(); // 手机端也要阻止
+
+            const dateDiv = document.createElement('div');
+            const d = new Date();
+            dateDiv.className = "absolute bottom-2 left-3 text-[9px] font-meta text-summer-sky/80 font-bold tracking-widest pointer-events-none";
+            dateDiv.innerText = `${d.getFullYear()}.${(d.getMonth() + 1).toString().padStart(2, '0')}.${d.getDate()}`;
+
+            const saveBtn = document.createElement('button');
+            saveBtn.className = "save-btn absolute bottom-2 right-2 w-8 h-8 bg-summer-yellow text-gray-900 rounded-full flex items-center justify-center shadow-md opacity-0 group-hover:opacity-100 z-30 translate-y-2 group-hover:translate-y-0";
+            saveBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M7.5 12L12 16.5m0 0L16.5 12M12 16.5V3" /></svg>`;
+            saveBtn.onmousedown = (e) => e.stopPropagation();
+            saveBtn.ontouchstart = (e) => e.stopPropagation();
+            saveBtn.onclick = () => savePhotoSafe(card, saveBtn);
+
+            addDecorations(card);
+            card.appendChild(img); card.appendChild(textDiv); card.appendChild(dateDiv); card.appendChild(saveBtn);
+            document.body.appendChild(card);
+
+            requestAnimationFrame(() => {
+                card.style.opacity = 1;
+                card.style.top = `${slotRect.top - 250}px`;
+                card.style.zIndex = 60;
+                card.style.transform = `scale(1)`;
+            });
+
+            setTimeout(() => { flyToRandomPos(card, img, textDiv); }, 800);
+        }
+
+        function flyToRandomPos(card, img, textDiv) {
+            const safeX = Math.random() * (window.innerWidth * 0.8) + window.innerWidth * 0.1;
+            const safeY = Math.random() * (window.innerHeight * 0.3) + 40;
+            const rot = (Math.random() * 16) - 8;
+
+            card.style.setProperty('--rot', `${rot}deg`);
+            card.style.transition = "all 1s ease-in-out";
+            card.style.left = `${safeX}px`;
+            card.style.top = `${safeY}px`;
+            card.style.transform = `rotate(${rot}deg)`;
+            card.style.zIndex = zIndexCounter++;
+
+            setTimeout(() => {
+                card.style.transition = "";
+                img.classList.remove('grayscale', 'blur-[2px]', 'contrast-125', 'brightness-75');
+                img.classList.add('sepia-[0.1]', 'contrast-[1.05]');
+                card.classList.add('developed');
+                generateAiMood(textDiv);
+            }, 1000);
+        }
+
+        function savePhotoSafe(card, btn) {
+            const oldIcon = btn.innerHTML;
+            btn.innerHTML = `<svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>`;
+            const clone = card.cloneNode(true);
+            clone.style.transform = "none"; clone.style.animation = "none"; clone.style.transition = "none";
+            clone.style.position = "fixed"; clone.style.left = "-9999px"; clone.style.top = "0";
+            const b = clone.querySelector('button'); if (b) b.remove();
+            document.body.appendChild(clone);
+            html2canvas(clone, { backgroundColor: null, scale: 3, useCORS: true, logging: false }).then(canvas => {
+                const a = document.createElement('a');
+                a.download = `Summer_Instax_${Date.now()}.png`;
+                a.href = canvas.toDataURL('image/png');
+                a.click();
+            }).catch(console.error).finally(() => { document.body.removeChild(clone); btn.innerHTML = oldIcon; });
+        }
+
+        const comments = ["Sunny vibes.", "Keep smiling.", "Summer dream.", "Pure joy.", "Golden hour.", "Stay cool.", "Memory unlocked."];
+        function generateAiMood(el) {
+            el.innerText = "Developing...";
+            setTimeout(() => {
+                el.innerText = comments[Math.floor(Math.random() * comments.length)];
+                el.onclick = () => { const t = prompt("写下此刻心情:", el.innerText); if (t) el.innerText = t; }
+            }, 1500);
+        }
+
+        const svgs = [
+            `<svg viewBox="0 0 24 24" fill="#FFD700" class="w-full h-full"><path d="M12 2.25a.75.75 0 01.75.75v2.25a.75.75 0 01-1.5 0V3a.75.75 0 01.75-.75zM7.5 12a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0zM18.894 6.166a.75.75 0 00-1.06-1.06l-1.591 1.59a.75.75 0 101.06 1.061l1.591-1.59zM21.75 12a.75.75 0 01-.75.75h-2.25a.75.75 0 010-1.5H21a.75.75 0 01.75.75zM12 18a.75.75 0 01.75.75V21a.75.75 0 01-1.5 0v-2.25A.75.75 0 0112 18zM6 12a.75.75 0 01-.75.75H3a.75.75 0 010-1.5h2.25A.75.75 0 016 12z"/></svg>`,
+            `<svg viewBox="0 0 24 24" fill="#4ade80" class="w-full h-full"><path d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25zm0 18c-4.556 0-8.25-3.694-8.25-8.25S7.444 3.75 12 3.75s8.25 3.694 8.25 8.25S16.556 20.25 12 20.25z"/><path d="M12 12a.75.75 0 01.75.75v3a.75.75 0 01-1.5 0v-3A.75.75 0 0112 12z" fill="#fff"/></svg>`,
+            `<svg viewBox="0 0 24 24" fill="#ff6b6b" class="w-full h-full"><path d="M11.645 20.91l-.007-.003-.022-.012a15.247 15.247 0 01-.383-.218 25.18 25.18 0 01-4.244-3.17C4.688 15.36 2.25 12.174 2.25 8.25 2.25 5.322 4.714 3 7.688 3A5.5 5.5 0 0112 5.052 5.5 5.5 0 0116.313 3c2.973 0 5.437 2.322 5.437 5.25 0 3.925-2.438 7.111-4.739 9.256a25.175 25.175 0 01-4.244 3.17 15.247 15.247 0 01-.383.219l-.022.012-.007.004-.003.001a.752.752 0 01-.704 0l-.003-.001z"/></svg>`
+        ];
+        function addDecorations(el) {
+            const count = Math.floor(Math.random() * 2) + 1;
+            for (let i = 0; i < count; i++) {
+                const d = document.createElement('div'); d.className = 'decoration-sticker';
+                const s = Math.random() * 18 + 15; d.style.width = s + 'px'; d.style.height = s + 'px';
+                d.style.left = Math.random() * 150 + 'px'; d.style.top = Math.random() > 0.5 ? Math.random() * 20 + 'px' : Math.random() * 20 + 200 + 'px';
+                d.style.transform = `rotate(${Math.random() * 360}deg)`; d.innerHTML = svgs[Math.floor(Math.random() * svgs.length)];
+                el.appendChild(d);
+            }
+        }
+
+        // 拖拽逻辑 (触摸+鼠标)
+        let activeCard = null, startX, startY, initX, initY;
+        const startDrag = (e) => {
+            const t = e.target.closest('.polaroid-card');
+            if (!t || e.target.closest('.font-hand') || e.target.closest('button')) return;
+            e.preventDefault(); activeCard = t; activeCard.classList.add('dragging'); activeCard.style.zIndex = zIndexCounter++;
+            const point = e.touches ? e.touches[0] : e;
+            startX = point.clientX; startY = point.clientY; initX = t.offsetLeft; initY = t.offsetTop;
+        };
+        const moveDrag = (e) => {
+            if (!activeCard) return; e.preventDefault();
+            const point = e.touches ? e.touches[0] : e;
+            activeCard.style.left = (initX + point.clientX - startX) + 'px';
+            activeCard.style.top = (initY + point.clientY - startY) + 'px';
+        };
+        const endDrag = () => { if (activeCard) { activeCard.classList.remove('dragging'); activeCard = null; } };
+        document.addEventListener('mousedown', startDrag); document.addEventListener('mousemove', moveDrag); document.addEventListener('mouseup', endDrag);
+        document.addEventListener('touchstart', startDrag, { passive: false }); document.addEventListener('touchmove', moveDrag, { passive: false }); document.addEventListener('touchend', endDrag);
+    </script>
+</body>
+
+</html>
