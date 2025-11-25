@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>手势勇者：Camera Quest (最终)</title>
+
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2463152068592975"
+    crossOrigin="anonymous" />
+
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1234567890123456"
+    crossorigin="anonymous"></script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+
+    <style>
+        body { margin: 0; overflow: hidden; background: #111; font-family: 'Segoe UI', sans-serif; color: white; user-select: none; }
+        #container { position: relative; width: 100vw; height: 100vh; }
+        
+        #game_canvas { 
+            position: absolute; width: 100%; height: 100%; display: block;
+            background: linear-gradient(to bottom, #1a1a2e, #16213e); 
+        }
+
+        /* 画中画摄像头 */
+        #pip-container {
+            position: absolute; bottom: 20px; left: 20px;
+            width: 240px; height: 180px;
+            border-radius: 12px; overflow: hidden;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            z-index: 100; background: #000;
+        }
+        #pip_canvas { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
+        .pip-guide { 
+            position: absolute; top: 10px; left: 50%; transform: translateX(-50%); 
+            font-size: 14px; color: #0f0; text-shadow: 1px 1px 0 #000; z-index: 101; font-weight: bold; width: 100%; text-align: center;
+        }
+        #pip-icon {
+             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); 
+             font-size: 80px; opacity: 0.5; color: white; text-shadow: 0 0 10px black; pointer-events: none;
+        }
+
+        /* UI */
+        #game-ui { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 50; }
+        
+        .hud-panel { position: absolute; padding: 10px 20px; background: rgba(0,0,0,0.6); border-radius: 10px; backdrop-filter: blur(4px); border: 1px solid rgba(255,255,255,0.1); }
+        #score-panel { top: 20px; left: 20px; font-size: 24px; font-weight: bold; color: #ffd700; }
+        #stats-panel { top: 20px; right: 20px; text-align: right; }
+        .bar-container { width: 180px; height: 8px; background: #333; margin: 8px 0; border-radius: 4px; overflow: hidden; }
+        .bar-fill { height: 100%; transition: width 0.1s linear; }
+        
+        #message-area { position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%); text-align: center; transition: opacity 0.3s; width: 80%; max-width: 600px;}
+        h1 { font-size: 50px; margin: 0; background: linear-gradient(45deg, #ff00cc, #3333ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .instruction-box { background: rgba(0,0,0,0.8); padding: 20px; border-radius: 15px; margin-top: 20px; text-align: left; display: inline-block; border: 1px solid #444; }
+        .key-hint { font-size: 20px; color: #ddd; margin: 5px 0; }
+        .key-icon { font-size: 24px; display: inline-block; width: 30px; text-align: center; }
+        .status-text { font-size: 24px; color: #0f0; margin-top: 20px; font-weight: bold; animation: blink 1s infinite; }
+        #loading-text { font-size: 20px; color: #aaa; margin: 20px; }
+
+        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+
+        #action-feedback { 
+            position: absolute; bottom: 35%; left: 50%; transform: translateX(-50%); 
+            font-size: 60px; font-weight: 900; color: #fff; opacity: 0; 
+            text-shadow: 0 5px 15px rgba(0,0,0,0.5);
+            transition: transform 0.1s;
+        }
+
+        #webcam_video { display: none; }
+        .hidden { opacity: 0; pointer-events: none; }
+    </style>
+</head>
+<body>
+
+<div id="container">
+    <video id="webcam_video"></video>
+    <canvas id="game_canvas"></canvas>
+
+    <div id="pip-container">
+        <div class="pip-guide" id="pip-status">正在启动...</div>
+        <canvas id="pip_canvas"></canvas>
+        <div id="pip-icon">⏳</div>
+    </div>
+
+    <div id="game-ui">
+        <div id="score-panel" class="hud-panel">SCORE: <span id="score">0</span></div>
+        
+        <div id="stats-panel" class="hud-panel">
+            <div>HP <div class="bar-container"><div id="hp-bar" class="bar-fill" style="background:#ff3333; width:100%"></div></div></div>
+            <div>SP <div class="bar-container"><div id="sp-bar" class="bar-fill" style="background:#00aaff; width:0%"></div></div></div>
+        </div>
+
+        <div id="message-area">
+            <h1>手势勇者 V3.3</h1>
+            <div id="loading-text">正在加载 AI 模型，请稍候...<br>请授予摄像头权限</div>
+            
+            <div id="rules-box" class="instruction-box hidden">
+                <div class="key-hint"><span class="key-icon">👉</span> <b>食指指右</b> → 右移</div>
+                <div class="key-hint"><span class="key-icon">👈</span> <b>食指指左</b> → 左移</div>
+                <div class="key-hint"><span class="key-icon">👊</span> <b>拳头</b> → 攻击</div>
+                <div class="key-hint"><span class="key-icon">✋</span> <b>手掌</b> → 防御 / 开始</div>
+                <div class="status-text">✋ 请对着摄像头举起手掌开始</div>
+            </div>
+        </div>
+
+        <div id="action-feedback"></div>
+    </div>
+</div>
+
+<script>
+// --- 0. 错误捕获 ---
+window.onerror = function(msg, url, line) {
+    document.getElementById('loading-text').innerHTML = `<span style="color:red">出错: ${msg}</span>`;
+    document.getElementById('pip-status').innerText = "ERROR";
+    return false;
+};
+
+// --- 1. 游戏配置 ---
+const canvas = document.getElementById('game_canvas');
+const ctx = canvas.getContext('2d');
+const pipCanvas = document.getElementById('pip_canvas');
+const pipCtx = pipCanvas.getContext('2d');
+const videoElement = document.getElementById('webcam_video');
+
+let gameState = 'LOADING'; // LOADING -> READY -> PLAYING -> GAMEOVER
+let score = 0;
+const player = { lane: 1, x: 0, hp: 100, sp: 0, state: 'IDLE', poseLocked: false };
+let entities = [];
+let particles = [];
+const LANES = [0.25, 0.5, 0.75];
+
+// --- 2. 辅助函数 ---
+function dist(p1, p2) {
+    return Math.sqrt(Math.pow(p1.x - p2.x, 2) + Math.pow(p1.y - p2.y, 2));
+}
+
+// --- 3. 手势识别核心 (指尖+拳掌) ---
+function detectGesture(landmarks) {
+    const wrist = landmarks[0];
+    const indexMCP = landmarks[5];
+    const indexTip = landmarks[8];
+
+    // 食指向量
+    const dx = indexTip.x - indexMCP.x;
+    const dy = indexTip.y - indexMCP.y;
+    // 水平判断
+    const isHorizontal = Math.abs(dx) > Math.abs(dy) * 1.2;
+
+    if (isHorizontal && Math.abs(dx) > 0.04) {
+        // scaleX(-1) 镜像后：dx < 0 为指向右边(视觉)，dx > 0 为指向左边(视觉)
+        return dx < 0 ? 'POINT_RIGHT' : 'POINT_LEFT';
+    }
+
+    // 拳头 vs 手掌 (使用距离法，更稳定)
+    const isFingerOpen = (tipIdx, mcpIdx) => dist(landmarks[tipIdx], wrist) > dist(landmarks[mcpIdx], wrist) * 1.3;
+    
+    let openFingers = 0;
+    if (isFingerOpen(8, 5)) openFingers++;
+    if (isFingerOpen(12, 9)) openFingers++;
+    if (isFingerOpen(16, 13)) openFingers++;
+    if (isFingerOpen(20, 17)) openFingers++;
+
+    if (openFingers >= 3) return 'PALM';
+    if (openFingers <= 1) return 'FIST';
+
+    return 'NONE';
+}
+
+function handleInput(gesture) {
+    // 状态管理
+    if (gameState === 'LOADING') {
+         // 模型已加载但尚未收到手势，等待
+         return;
+    }
+    
+    if (gameState === 'READY') {
+        if (gesture === 'PALM') startGame();
+        document.getElementById('pip-icon').innerText = gesture === 'PALM' ? '✅' : '✋';
+        return;
+    }
+
+    if (gameState !== 'PLAYING') return;
+
+    // 游戏操作
+    if (gesture === 'POINT_LEFT' || gesture === 'POINT_RIGHT') {
+        if (!player.poseLocked) {
+            if (gesture === 'POINT_LEFT' && player.lane > 0) {
+                player.lane--; triggerFeedback('👈 左移', '#0ff'); player.poseLocked = true;
+            } else if (gesture === 'POINT_RIGHT' && player.lane < 2) {
+                player.lane++; triggerFeedback('👉 右移', '#0ff'); player.poseLocked = true;
+            }
+        }
+    } else {
+        player.poseLocked = false;
+    }
+
+    if (gesture === 'FIST') player.state = 'ATTACK';
+    else if (gesture === 'PALM') player.state = 'DEFEND';
+    else player.state = 'IDLE';
+
+    const iconMap = { 'POINT_LEFT': '👈', 'POINT_RIGHT': '👉', 'FIST': '👊', 'PALM': '✋', 'NONE': '...' };
+    document.getElementById('pip-icon').innerText = iconMap[gesture] || '';
+}
+
+// --- 4. 游戏循环 ---
+function update(dt) {
+    const targetX = LANES[player.lane] * canvas.width;
+    player.x += (targetX - player.x) * 10 * dt;
+
+    if (Math.random() < 0.02 + (score * 0.0001)) spawnEntity();
+
+    const hitYStart = canvas.height * 0.8;
+    const hitYEnd = canvas.height * 0.95;
+
+    for (let i = entities.length - 1; i >= 0; i--) {
+        let e = entities[i];
+        e.y += e.speed * dt * 60;
+
+        if (!e.hit && e.y > hitYStart && e.y < hitYEnd) {
+            if (Math.abs(e.lane - player.lane) < 0.2) resolveCollision(e);
+        }
+
+        if (e.y > canvas.height) {
+            if (!e.hit && e.type === 'WALL') score += 10;
+            entities.splice(i, 1);
+        }
+    }
+    
+    if (player.sp > 0) player.sp -= 10 * dt;
+    if (player.hp <= 0) endGame();
+
+    document.getElementById('score').innerText = Math.floor(score);
+    document.getElementById('hp-bar').style.width = Math.max(0, player.hp) + '%';
+    document.getElementById('sp-bar').style.width = player.sp + '%';
+}
+
+function resolveCollision(e) {
+    if (e.hit) return;
+    let success = false;
+    
+    if (e.type === 'WALL') {
+        player.hp -= 20; triggerFeedback('💥 撞墙', '#f00');
+    } else if (e.type === 'ENEMY') {
+        if (player.state === 'ATTACK') {
+            score += 50; player.sp += 20; success = true;
+            triggerFeedback('👊 击杀', 'orange');
+            spawnParticles(player.x, canvas.height * 0.85, 'orange');
+        } else {
+            player.hp -= 30; triggerFeedback('👾 受伤', '#a0f');
+        }
+    } else if (e.type === 'MISSILE') {
+        if (player.state === 'DEFEND') {
+            score += 30; success = true;
+            triggerFeedback('🛡️ 格挡', '#0af');
+            spawnParticles(player.x, canvas.height * 0.85, '#0af');
+        } else {
+            player.hp -= 15; triggerFeedback('🔥 中弹', '#f00');
+        }
+    }
+
+    if (!success && e.type !== 'WALL') {
+         canvas.style.transform = `translate(${Math.random()*10-5}px, ${Math.random()*10-5}px)`;
+         setTimeout(() => canvas.style.transform = 'none', 50);
+    }
+    e.hit = true;
+}
+
+function render() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    // 跑道
+    ctx.strokeStyle = 'rgba(255,255,255,0.1)'; ctx.lineWidth = 4;
+    for(let i=1; i<3; i++) {
+        ctx.beginPath(); ctx.moveTo(canvas.width * (i/3), 0);
+        ctx.lineTo(canvas.width * (i/3), canvas.height); ctx.stroke();
+    }
+    // 实体
+    entities.forEach(e => {
+        const x = LANES[e.lane] * canvas.width;
+        ctx.globalAlpha = e.hit ? 0.2 : 1;
+        ctx.font = '60px Arial'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        let icon = e.type === 'ENEMY' ? '👾' : (e.type === 'MISSILE' ? '🚀' : '🧱');
+        ctx.fillText(icon, x, e.y);
+    });
+    ctx.globalAlpha = 1;
+    renderParticles();
+    // 玩家
+    ctx.save(); ctx.translate(player.x, canvas.height * 0.85);
+    if (player.state === 'ATTACK') { ctx.shadowColor = 'orange'; ctx.shadowBlur = 40; }
+    else if (player.state === 'DEFEND') { ctx.shadowColor = '#00aaff'; ctx.shadowBlur = 40; }
+    ctx.font = '80px Arial'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    let pIcon = player.state === 'ATTACK' ? '👊' : (player.state === 'DEFEND' ? '🛡️' : '😐');
+    ctx.fillText(pIcon, 0, 0); ctx.restore();
+}
+
+function spawnEntity() {
+    const types = ['WALL', 'WALL', 'ENEMY'];
+    if (score > 100) types.push('MISSILE');
+    entities.push({
+        type: types[Math.floor(Math.random() * types.length)],
+        lane: Math.floor(Math.random() * 3),
+        y: -50, speed: 5 + (score * 0.01), hit: false
+    });
+}
+function spawnParticles(x, y, color) { for(let i=0; i<10; i++) particles.push({x, y, color, vx:(Math.random()-0.5)*20, vy:(Math.random()-0.5)*20, life:1}); }
+function renderParticles() {
+    for(let i=particles.length-1; i>=0; i--) {
+        let p = particles[i]; p.x+=p.vx; p.y+=p.vy; p.life-=0.1;
+        if(p.life<=0) particles.splice(i,1);
+        else { ctx.fillStyle=p.color; ctx.globalAlpha=p.life; ctx.beginPath(); ctx.arc(p.x,p.y,5,0,Math.PI*2); ctx.fill(); }
+    }
+    ctx.globalAlpha=1;
+}
+function triggerFeedback(text, color) {
+    const el = document.getElementById('action-feedback');
+    el.innerText = text; el.style.color = color; el.style.opacity = 1;
+    el.style.transform = 'translate(-50%) scale(1.2)';
+    setTimeout(() => { el.style.opacity = 0; el.style.transform = 'translate(-50%) scale(1)'; }, 500);
+}
+function startGame() {
+    gameState = 'PLAYING'; score = 0; player.hp = 100; entities = [];
+    document.getElementById('message-area').classList.add('hidden');
+}
+function endGame() {
+    gameState = 'GAMEOVER';
+    document.getElementById('message-area').classList.remove('hidden');
+    document.getElementById('loading-text').style.display = 'none';
+    document.getElementById('rules-box').innerHTML = "<h2 style='color:red'>GAME OVER</h2><p class='status-text'>✋ 举手重来</p>";
+    document.getElementById('rules-box').classList.remove('hidden');
+    setTimeout(() => { gameState = 'READY'; }, 2000);
+}
+
+// --- 5. MediaPipe 初始化 ---
+let lastTime = 0;
+
+// 确保在 Camera 类加载后执行
+window.onload = function() {
+    try {
+        const hands = new Hands({locateFile: (file) => {
+            return `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`;
+        }});
+
+        hands.setOptions({
+            maxNumHands: 1,
+            // 关键：设置为 0 (Lite) 防止崩溃
+            modelComplexity: 0, 
+            minDetectionConfidence: 0.5,
+            minTrackingConfidence: 0.5
+        });
+
+        hands.onResults(results => {
+            // 隐藏 Loading 提示，显示 Rules
+            if (gameState === 'LOADING') {
+                gameState = 'READY';
+                document.getElementById('loading-text').style.display = 'none';
+                document.getElementById('rules-box').classList.remove('hidden');
+                document.getElementById('pip-status').innerText = "识别中";
+            }
+            
+            pipCanvas.width = results.image.width; pipCanvas.height = results.image.height;
+            pipCtx.clearRect(0, 0, pipCanvas.width, pipCanvas.height);
+            pipCtx.drawImage(results.image, 0, 0, pipCanvas.width, pipCanvas.height);
+            
+            if (results.multiHandLandmarks.length) {
+                const marks = results.multiHandLandmarks[0];
+                drawConnectors(pipCtx, marks, HAND_CONNECTIONS, {color: '#0f0', lineWidth: 2});
+                const gesture = detectGesture(marks);
+                handleInput(gesture);
+            } else {
+                document.getElementById('pip-icon').innerText = '❌';
+            }
+
+            const now = performance.now();
+            const dt = (now - lastTime) / 1000;
+            lastTime = now;
+            
+            if (gameState === 'PLAYING') update(dt);
+            render();
+        });
+
+        const camera = new Camera(videoElement, {
+            onFrame: async () => { await hands.send({image: videoElement}); },
+            width: 640, height: 480
+        });
+        camera.start();
+        
+    } catch (e) {
+        alert("初始化失败: " + e.message + "\n请刷新页面重试");
+    }
+};
+
+window.addEventListener('resize', () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; });
+canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+</script>
+</body>
+</html>

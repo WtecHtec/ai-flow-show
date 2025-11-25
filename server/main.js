@@ -598,6 +598,11 @@ app.get("/apps/palid", async (req, res) => {
   res.sendFile(path.join(__dirname, 'apps/palid/index.html'));
 });
 
+// 手势游戏
+app.get("/apps/gesture", async (req, res) => {
+  res.sendFile(path.join(__dirname, 'apps/gesture/index.html'));
+});
+
 // ✅ 兜底路由
 app.use((req, res) => {
   res.sendFile(path.join(__dirname, 'dist/index.html'));
