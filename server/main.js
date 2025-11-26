@@ -605,6 +605,7 @@ app.get("/apps/gesture", async (req, res) => {
 
 // ✅ 兜底路由
 app.use((req, res) => {
+  res.setHeader('Cache-Control', 'no-cache');
   res.sendFile(path.join(__dirname, 'dist/index.html'));
 });
 
