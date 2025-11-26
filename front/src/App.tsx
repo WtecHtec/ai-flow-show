@@ -1,6 +1,7 @@
 import { lazy, Suspense } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import NotFound from "./views/NotFound";
 
 
 const PerViewPage = lazy(() => import("@/views/preview"));
@@ -38,7 +39,7 @@ export default function App() {
           <Route path="/sleep" element={
             <SleepHelperPage/>
           } ></Route>
-          <Route path="*" element={<div>Not Found</div>} />
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </Suspense>
     </main>

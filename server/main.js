@@ -603,6 +603,10 @@ app.get("/apps/gesture", async (req, res) => {
   res.sendFile(path.join(__dirname, 'apps/gesture/index.html'));
 });
 
+app.get("/404", async (req, res) => {
+  res.sendFile(path.join(__dirname, '404/index.html'));
+});
+
 // ✅ 兜底路由
 app.use((req, res) => {
   res.setHeader('Cache-Control', 'no-cache');
