@@ -5,19 +5,24 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>404 - Haunted Drive</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    
     <script src="https://unpkg.com/three@0.160.0/build/three.min.js"></script>
 
     <style>
         body { margin: 0; overflow: hidden; background-color: #000; font-family: 'Courier New', Courier, monospace; }
         #canvas-container { width: 100vw; height: 100vh; display: block; }
         
+        /* 惊吓闪烁层 */
         #scare-overlay {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: red; opacity: 0; pointer-events: none; z-index: 50;
-            mix-blend-mode: overlay; transition: opacity 0.05s;
+            background: red;
+            opacity: 0; pointer-events: none; z-index: 50;
+            mix-blend-mode: overlay;
+            transition: opacity 0.05s;
         }
         .scare-active { opacity: 0.8 !important; }
 
+        /* 按键样式 */
         .key-cap {
             display: inline-flex; justify-content: center; align-items: center;
             width: 2rem; height: 2rem; background: rgba(255,255,255,0.1);
@@ -25,35 +30,8 @@
             color: #fff; margin: 0 2px; font-weight: bold;
         }
         
+        /* 加载中/错误提示 */
         #loading { position: fixed; inset:0; background: #000; z-index: 100; display: flex; justify-content: center; align-items: center; color: #059669; }
-
-        /* 雷达样式 */
-        .radar-container {
-            width: 180px; height: 180px;
-            background: rgba(0, 15, 10, 0.9);
-            border: 2px solid rgba(16, 185, 129, 0.6);
-            border-radius: 50%;
-            overflow: hidden;
-            position: relative;
-            backdrop-filter: blur(4px);
-            box-shadow: 0 0 25px rgba(0,0,0,0.9);
-        }
-        /* 十字准星 */
-        .radar-crosshair {
-            position: absolute; top: 50%; left: 50%; width: 100%; height: 100%;
-            transform: translate(-50%, -50%);
-            pointer-events: none;
-            opacity: 0.3;
-        }
-        .radar-crosshair::before { content:''; position: absolute; left: 0; top: 50%; width: 100%; height: 1px; background: #10b981; }
-        .radar-crosshair::after { content:''; position: absolute; top: 0; left: 50%; height: 100%; width: 1px; background: #10b981; }
-
-        .radar-scan {
-            position: absolute; inset: 0; border-radius: 50%;
-            background: conic-gradient(from 0deg, transparent 0deg, rgba(16, 185, 129, 0.15) 60deg, transparent 60deg);
-            animation: radarSpin 3s linear infinite;
-        }
-        @keyframes radarSpin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
     </style>
 </head>
 <body class="antialiased text-white select-none">
@@ -80,20 +58,10 @@
             </div>
         </div>
         
-        <div class="flex justify-between items-end w-full mt-auto">
-            <div class="absolute left-1/2 transform -translate-x-1/2 bottom-8">
-                <div id="interaction-ui" class="text-center transition-all duration-300 opacity-0 translate-y-8">
-                    <div class="inline-block bg-emerald-950/90 border border-emerald-500/50 rounded-xl px-8 py-5 shadow-[0_0_30px_rgba(16,185,129,0.3)]">
-                        <div class="text-xl text-emerald-200 mb-1">前往 <span id="target-name" class="font-bold text-white text-2xl mx-1">???</span> ?</div>
-                        <div class="text-emerald-500 text-xs font-mono">按 <span class="bg-emerald-500 text-black px-1 rounded font-bold">ENTER</span> 确认跳转</div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="radar-container pointer-events-auto ml-auto">
-                <div class="radar-scan"></div>
-                <div class="radar-crosshair"></div>
-                <canvas id="minimap" width="180" height="180" class="relative z-10"></canvas>
+        <div id="interaction-ui" class="text-center transition-all duration-300 opacity-0 transform translate-y-8">
+            <div class="inline-block bg-emerald-950/90 border border-emerald-500/50 rounded-xl px-8 py-5 shadow-[0_0_30px_rgba(16,185,129,0.3)]">
+                <div class="text-3xl font-bold text-emerald-400 mb-1 tracking-wider">EXIT FOUND</div>
+                <div class="text-emerald-200 text-sm">PRESS <span class="bg-emerald-500 text-black px-2 py-0.5 rounded font-bold mx-1">ENTER</span> TO ESCAPE</div>
             </div>
         </div>
     </div>
@@ -102,16 +70,15 @@
 
     <script>
         const CONFIG = {
-            // 配置多个路标，所有路标都会生成在地图上
             destinations: [
-            { text: '主页', url: 'https://iam.xujingyichang.top/', color: '#10b981' }, // Emerald
+                { text: '主页', url: 'https://iam.xujingyichang.top/', color: '#10b981' }, // Emerald
                 { text: '博客', url: 'https://blogs.xujingyichang.top', color: '#3b82f6' }, // Blue
                 { text: 'GitHub', url: 'https://github.com/WtecHtec', color: '#8b5cf6' }, // Purple
                 { text: '联系我', url: 'https://iam.xujingyichang.top/', color: '#f59e0b' } // Amber
             ],
             weather: Math.random() > 0.5 ? 'rain' : 'fog', 
-            ghostCount: 15,
-            worldSize: 500 // 扩大一点地图
+            ghostCount: 12,
+            worldSize: 400
         };
 
         const wBadge = document.getElementById('weather-badge');
@@ -125,26 +92,13 @@
 
         let scene, camera, renderer;
         let car, wheels = [], rainSystem;
-        
-        // 🟢 变化：signPosts 变成数组，存储所有生成的路标对象
-        let signPosts = []; 
-        let currentActiveSign = null; // 当前靠近的路标数据
-
+        let signPost, currentTarget;
         let ghosts = [];
         let isCloseToSign = false;
         let scareCooldown = 0;
         
-        // 小地图变量
-        let minimapCtx;
-        // 雷达探测半径（世界单位），即小地图能显示多远
-        const radarRadius = 120; 
-        const canvasSize = 180;
-        const centerOffset = canvasSize / 2;
-        // 比例尺：画布像素 / 世界距离
-        const scale = (canvasSize / 2) / radarRadius; 
-
         const input = { w: false, a: false, s: false, d: false };
-        const physics = { speed: 0, acceleration: 0.02, friction: 0.96, maxSpeed: 0.8, turnSpeed: 0.045 };
+        const physics = { speed: 0, acceleration: 0.02, friction: 0.96, maxSpeed: 0.8, turnSpeed: 0.05 };
 
         window.onload = function() {
             if (typeof THREE === 'undefined') {
@@ -155,6 +109,7 @@
             try {
                 init();
                 document.getElementById('loading').style.display = 'none';
+                // 🟢 这里调用 animate，现在下方已经正确定义了该函数
                 animate();
             } catch (e) {
                 console.error(e);
@@ -163,8 +118,7 @@
         };
 
         function init() {
-            const canvas = document.getElementById('minimap');
-            minimapCtx = canvas.getContext('2d');
+            currentTarget = CONFIG.destinations[Math.floor(Math.random() * CONFIG.destinations.length)];
 
             const container = document.getElementById('canvas-container');
             scene = new THREE.Scene();
@@ -204,19 +158,9 @@
             createGhosts();
             if (CONFIG.weather === 'rain') createRain();
 
-            // 🟢 变化：循环生成所有路标
-            const totalSigns = CONFIG.destinations.length;
-            CONFIG.destinations.forEach((dest, index) => {
-                // 将路标均匀分布在圆周上，并增加随机距离
-                const angleStep = (Math.PI * 2) / totalSigns;
-                const angle = index * angleStep + (Math.random() - 0.5) * 0.5; // 稍微随机一点角度
-                const dist = 60 + Math.random() * 80; // 距离中心 60-140 单位
-                
-                const x = Math.sin(angle) * dist;
-                const z = -Math.cos(angle) * dist;
-                
-                createSignPost(x, z, dest);
-            });
+            const angle = (Math.random() - 0.5) * Math.PI; 
+            const dist = 50 + Math.random() * 50; 
+            createSignPost(Math.sin(angle) * dist, -Math.cos(angle) * dist);
 
             car = createCar();
             scene.add(car);
@@ -226,6 +170,7 @@
             window.addEventListener('keyup', (e) => handleKey(e, false), false);
         }
 
+        // 🟢 补回 animate 函数
         function animate() {
             requestAnimationFrame(animate);
             const time = Date.now() * 0.001;
@@ -235,83 +180,17 @@
             updateRain();
             updateCamera();
             checkInteraction();
-            updateMinimap();
             
             renderer.render(scene, camera);
-        }
-
-        // 🟢 核心重构：雷达式小地图
-        function updateMinimap() {
-            if (!minimapCtx || !car) return;
-            
-            // 清空画布
-            minimapCtx.clearRect(0, 0, canvasSize, canvasSize);
-
-            const originX = car.position.x;
-            const originZ = car.position.z;
-
-            // 1. 绘制路标 (绿色圆点)
-            // 逻辑：计算路标相对于车的坐标，然后缩放绘制
-            signPosts.forEach(signObj => {
-                const mesh = signObj.mesh;
-                
-                // 相对坐标
-                const relX = mesh.position.x - originX;
-                const relZ = mesh.position.z - originZ;
-
-                // 简单的坐标转换 (这里不旋转地图，只平移，保持“上北下南”的绝对方向感，不容易晕)
-                // 如果想要地图跟随车头旋转，需要在这里应用 2D 旋转矩阵
-                const screenX = centerOffset + relX * scale;
-                const screenY = centerOffset + relZ * scale;
-
-                // 检查是否在雷达显示范围内
-                const dist = Math.sqrt(relX*relX + relZ*relZ);
-                
-                if (dist < radarRadius) {
-                    minimapCtx.beginPath();
-                    minimapCtx.arc(screenX, screenY, 3.5, 0, Math.PI * 2);
-                    minimapCtx.fillStyle = '#10b981'; // 绿点
-                    minimapCtx.fill();
-
-                    // 添加文字标签 (仅显示首字，避免拥挤)
-                    minimapCtx.fillStyle = '#a7f3d0';
-                    minimapCtx.font = '10px Arial';
-                    minimapCtx.textAlign = 'center';
-                    minimapCtx.fillText(signObj.data.text.substring(0,2), screenX, screenY - 6);
-                } else {
-                    // (可选) 如果在范围外，可以在边缘画一个指示箭头，这里为了简洁暂时省略
-                }
-            });
-
-            // 2. 绘制小车 (始终在中心)
-            minimapCtx.save();
-            minimapCtx.translate(centerOffset, centerOffset);
-            
-            // 因为地图是“上北下南”不动的，所以小车图标需要根据车身角度旋转
-            // ThreeJS 旋转 Y 轴对应 2D 画布的旋转
-            minimapCtx.rotate(-car.rotation.y); 
-
-            // 画车身
-            minimapCtx.fillStyle = '#ef4444'; // 亮红
-            minimapCtx.beginPath();
-            minimapCtx.moveTo(0, -5); // 车头
-            minimapCtx.lineTo(-4, 4);
-            minimapCtx.lineTo(0, 2);  // 凹陷尾部
-            minimapCtx.lineTo(4, 4);
-            minimapCtx.fill();
-
-            minimapCtx.restore();
         }
 
         function handleKey(e, isPressed) {
             const key = e.key.toLowerCase();
             if (input.hasOwnProperty(key)) input[key] = isPressed;
-            
-            // 🟢 交互逻辑：只跳转到 currentActiveSign
-            if (e.key === 'Enter' && isPressed && isCloseToSign && currentActiveSign) {
+            if (e.key === 'Enter' && isPressed && isCloseToSign) {
                 document.body.style.transition = 'opacity 1s';
                 document.body.style.opacity = '0';
-                setTimeout(() => window.location.href = currentActiveSign.url, 1000);
+                setTimeout(() => window.location.href = currentTarget.url, 1000);
             }
         }
 
@@ -321,19 +200,15 @@
             physics.speed *= physics.friction;
             if (Math.abs(physics.speed) < 0.001) physics.speed = 0;
             
-            if (input.a) car.rotation.y += physics.turnSpeed;
-            if (input.d) car.rotation.y -= physics.turnSpeed;
+            if (Math.abs(physics.speed) > 0.01) {
+                const dir = physics.speed > 0 ? 1 : -1;
+                if (input.a) car.rotation.y += physics.turnSpeed * dir;
+                if (input.d) car.rotation.y -= physics.turnSpeed * dir;
+            }
 
             car.translateZ(-physics.speed);
             wheels.forEach(w => w.rotation.x += physics.speed * 2);
             car.children[0].position.y = 0.8 + Math.sin(Date.now() * 0.02) * 0.01 * (Math.abs(physics.speed)*10);
-        }
-
-        function updateCamera() {
-            const offset = new THREE.Vector3(0, 8, 15);
-            offset.applyMatrix4(car.matrixWorld);
-            camera.position.lerp(offset, 0.1);
-            camera.lookAt(car.position.x, car.position.y + 1, car.position.z);
         }
 
         function updateGhosts(time) {
@@ -369,39 +244,26 @@
             scareCooldown = 60;
         }
 
-        // 🟢 变化：检查所有路标
+        function updateCamera() {
+            const offset = new THREE.Vector3(0, 6, 12);
+            offset.applyMatrix4(car.matrixWorld);
+            camera.position.lerp(offset, 0.1);
+            camera.lookAt(car.position.x, car.position.y + 1, car.position.z);
+        }
+
         function checkInteraction() {
-            if (signPosts.length === 0) return;
-
-            let closestDist = Infinity;
-            let closestSign = null;
-
-            // 寻找最近的路标
-            signPosts.forEach(obj => {
-                const dist = car.position.distanceTo(obj.mesh.position);
-                if (dist < closestDist) {
-                    closestDist = dist;
-                    closestSign = obj;
-                }
-            });
-
+            if (!signPost) return;
+            const dist = car.position.distanceTo(signPost.position);
             const ui = document.getElementById('interaction-ui');
-            const nameEl = document.getElementById('target-name');
-
-            if (closestDist < 10) {
-                if (!isCloseToSign || currentActiveSign !== closestSign.data) {
+            if (dist < 10) {
+                if (!isCloseToSign) {
                     isCloseToSign = true;
-                    currentActiveSign = closestSign.data;
-                    nameEl.innerText = closestSign.data.text; // 更新 UI 文本
                     ui.classList.remove('opacity-0', 'translate-y-8');
-                    ui.classList.remove('pointer-events-none');
                 }
             } else {
                 if (isCloseToSign) {
                     isCloseToSign = false;
-                    currentActiveSign = null;
                     ui.classList.add('opacity-0', 'translate-y-8');
-                    ui.classList.add('pointer-events-none');
                 }
             }
         }
@@ -410,7 +272,7 @@
             if (!rainSystem) return;
             const positions = rainSystem.geometry.attributes.position.array;
             for(let i=1; i<positions.length; i+=3) {
-                positions[i] -= 0.6; 
+                positions[i] -= 0.6; // 稀疏后的慢速下落
                 if (positions[i] < 0) positions[i] = 60; 
             }
             rainSystem.geometry.attributes.position.needsUpdate = true;
@@ -420,7 +282,7 @@
 
         function createRain() {
             const geo = new THREE.BufferGeometry();
-            const count = 1500; 
+            const count = 1500; // 减少雨滴数量
             const positions = [];
             for(let i=0; i<count; i++) {
                 positions.push((Math.random()-0.5)*120); 
@@ -428,7 +290,12 @@
                 positions.push((Math.random()-0.5)*120); 
             }
             geo.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
-            const mat = new THREE.PointsMaterial({ color: 0xaaaaaa, size: 0.25, transparent:true, opacity:0.6 });
+            const mat = new THREE.PointsMaterial({ 
+                color: 0xaaaaaa, 
+                size: 0.25, 
+                transparent:true, 
+                opacity:0.6 
+            });
             rainSystem = new THREE.Points(geo, mat);
             scene.add(rainSystem);
         }
@@ -462,9 +329,11 @@
                 group.add(w);
             });
 
-            const leftLight = new THREE.SpotLight(0xfffff0, 800);
+            // 强力车灯
+            const leftLight = new THREE.SpotLight(0xfffff0, 5, 60, 0.6, 0.5, 1);
             leftLight.position.set(-0.8, 1, -1.8);
             leftLight.target.position.set(-0.8, 0, -25);
+            leftLight.intensity = 3000; 
             leftLight.angle = 0.5;
             leftLight.penumbra = 0.3;
             leftLight.distance = 80;
@@ -512,16 +381,13 @@
             }
         }
 
-        // 🟢 变化：生成路标并存入数组
-        function createSignPost(x, z, destinationData) {
+        function createSignPost(x, z) {
             const group = new THREE.Group();
-            
             const pole = new THREE.Mesh(
                 new THREE.CylinderGeometry(0.15, 0.15, 7),
                 new THREE.MeshStandardMaterial({ color: 0x222 })
             );
             pole.position.y = 3.5; pole.castShadow = true; group.add(pole);
-
             const canvas = document.createElement('canvas');
             canvas.width = 512; canvas.height = 256;
             const ctx = canvas.getContext('2d');
@@ -529,21 +395,18 @@
             ctx.strokeStyle = '#fff'; ctx.lineWidth = 15; ctx.strokeRect(10,10,492,236);
             ctx.fillStyle = '#fff'; ctx.font = 'bold 70px Arial';
             ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-            // 使用传入的文字
-            ctx.fillText(destinationData.text, 256, 128);
-            
+            ctx.fillText(currentTarget.text, 256, 128);
             const texture = new THREE.CanvasTexture(canvas);
             const board = new THREE.Mesh(
                 new THREE.BoxGeometry(4, 2, 0.2),
-                new THREE.MeshStandardMaterial({ map: texture, emissive: 0x047857, emissiveIntensity: 1.0 })
+                new THREE.MeshStandardMaterial({ map: texture, emissive: 0x047857, emissiveIntensity: 0.5 })
             );
             board.position.y = 6; group.add(board);
-
+            const beacon = new THREE.PointLight(0x10b981, 100, 50); 
+            beacon.position.y = 7.5; group.add(beacon);
             group.position.set(x, 0, z); group.lookAt(0,0,0);
             scene.add(group);
-            
-            // 存入全局数组
-            signPosts.push({ mesh: group, data: destinationData });
+            signPost = group;
         }
 
         function createGround() {
