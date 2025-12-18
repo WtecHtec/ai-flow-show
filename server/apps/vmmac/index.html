@@ -1,0 +1,3199 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>macOS 模拟操作系统</title>
+    <style>
+        /* 保持原有所有样式，修改全屏相关样式 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+        }
+
+        body {
+            height: 100vh;
+            overflow: hidden;
+            background-color: #1e1e1e;
+            color: #fff;
+        }
+
+        /* 桌面背景 */
+        #desktop {
+            width: 100%;
+            height: calc(100% - 40px);
+            background-size: cover;
+            background-position: center;
+            position: relative;
+            transition: background-image 0.5s ease;
+        }
+
+        /* 顶部菜单栏 */
+        #menu-bar {
+            height: 40px;
+            background-color: rgba(22, 22, 22, 0.95);
+            display: flex;
+            align-items: center;
+            padding: 0 15px;
+            color: #fff;
+            font-size: 14px;
+            justify-content: space-between;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            position: relative;
+            z-index: 1000;
+        }
+
+        .menu-left {
+            display: flex;
+            gap: 15px;
+            position: relative;
+        }
+
+        .menu-right {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .menu-item {
+            cursor: pointer;
+            padding: 5px 8px;
+            border-radius: 4px;
+            user-select: none;
+            position: relative;
+        }
+
+        .menu-item:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        /* 下拉菜单样式 */
+        .menu-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background-color: rgba(40, 40, 40, 0.98);
+            border-radius: 6px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+            padding: 5px 0;
+            min-width: 180px;
+            display: none;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            z-index: 2000;
+        }
+
+        .menu-dropdown.show {
+            display: block;
+        }
+
+        .menu-dropdown .menu-item {
+            padding: 8px 15px;
+            border-radius: 3px;
+            margin: 2px 5px;
+            font-size: 13px;
+        }
+
+        .menu-dropdown .menu-item:hover {
+            background-color: rgba(255, 255, 255, 0.15);
+        }
+
+        .menu-dropdown .menu-separator {
+            height: 1px;
+            background-color: rgba(255, 255, 255, 0.1);
+            margin: 5px;
+        }
+
+        .menu-dropdown .menu-item.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .menu-dropdown .menu-item.disabled:hover {
+            background-color: transparent;
+        }
+
+        /* 苹果菜单特殊样式 */
+        #apple-menu-item {
+            font-weight: 500;
+            font-size: 18px; /* 更大字体显示图标 */
+            padding: 0 8px;
+        }
+
+        #apple-menu {
+            left: 0;
+            min-width: 200px;
+        }
+
+        #apple-menu .menu-item:first-child {
+            font-weight: 600;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 5px;
+            padding-bottom: 10px;
+        }
+
+        #apple-menu .menu-item:last-child {
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            margin-top: 5px;
+            padding-top: 10px;
+        }
+
+        /* 桌面图标 */
+        .desktop-icon {
+            position: absolute;
+            width: 70px;
+            text-align: center;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 8px;
+            transition: background-color 0.2s;
+        }
+
+        .desktop-icon:hover {
+            background-color: rgba(255, 255, 255, 0.15);
+        }
+
+        .icon-container {
+            width: 50px;
+            height: 50px;
+            margin: 0 auto 5px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: bold;
+            color: white;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+        }
+
+        .desktop-icon span {
+            font-size: 12px;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+            display: block;
+        }
+
+        /* Dock栏 */
+        #dock {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            height: 60px;
+            background-color: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            padding: 0 15px;
+            gap: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .dock-item {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            background-color: rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: transform 0.2s, background-color 0.2s;
+            font-size: 24px;
+        }
+
+        .dock-item:hover {
+            transform: scale(1.2);
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+
+        /* 窗口样式 */
+        .window {
+            position: absolute;
+            background-color: rgba(40, 40, 40, 0.95);
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            overflow: hidden;
+            display: none;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            min-width: 400px;
+            min-height: 300px;
+            z-index: 100;
+            transition: all 0.3s ease;
+        }
+
+        .window.active {
+            border: 1px solid rgba(0, 122, 255, 0.5);
+            box-shadow: 0 10px 30px rgba(0, 122, 255, 0.3);
+        }
+
+        .window-header {
+            height: 35px;
+            background-color: rgba(30, 30, 30, 0.95);
+            display: flex;
+            align-items: center;
+            padding: 0 10px;
+            cursor: move;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .window-buttons {
+            display: flex;
+            gap: 8px;
+            margin-right: 10px;
+        }
+
+        .window-button {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .window-button:hover {
+            transform: scale(1.2);
+        }
+
+        .close-btn { background-color: #ff5f57; }
+        .minimize-btn { background-color: #ffbd2e; }
+        .maximize-btn { background-color: #28c940; }
+
+        .window-title {
+            font-size: 13px;
+            font-weight: 500;
+            flex-grow: 1;
+            text-align: center;
+            opacity: 0.8;
+        }
+
+        .window-content {
+            height: calc(100% - 35px);
+            overflow: auto;
+            padding: 15px;
+            font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        /* 终端样式 */
+        #terminal-content {
+            background-color: #1e1e1e;
+            color: #e0e0e0;
+            padding: 15px;
+            overflow-y: auto;
+            height: 100%;
+            font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+        }
+
+        .terminal-line {
+            margin: 5px 0;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .terminal-input {
+            display: flex;
+            align-items: center;
+            margin-top: 10px;
+        }
+
+        .terminal-prompt {
+            color: #4ec9b0;
+            margin-right: 8px;
+            font-weight: bold;
+        }
+
+        .terminal-input-field {
+            background: transparent;
+            border: none;
+            color: #e0e0e0;
+            flex-grow: 1;
+            outline: none;
+            font-family: inherit;
+            font-size: inherit;
+        }
+
+        /* Finder样式 */
+        .finder-container {
+            display: flex;
+            height: 100%;
+            background-color: #2a2a2a;
+        }
+
+        .finder-sidebar {
+            width: 200px;
+            background-color: #252525;
+            border-right: 1px solid #3a3a3a;
+            padding: 10px;
+        }
+
+        .finder-main {
+            flex-grow: 1;
+            padding: 10px;
+            overflow-y: auto;
+        }
+
+        .finder-item {
+            padding: 8px;
+            margin: 2px 0;
+            border-radius: 5px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+        }
+
+        .finder-item:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .finder-toolbar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .finder-btn {
+            background-color: #3a3a3a;
+            border: none;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .finder-btn:hover {
+            background-color: #4a4a4a;
+        }
+
+        .finder-btn:active {
+            transform: scale(0.95);
+        }
+
+        /* VS Code样式 */
+        .vscode-container {
+            display: flex;
+            height: 100%;
+            background-color: #1e1e1e;
+        }
+
+        .vscode-sidebar {
+            width: 200px;
+            background-color: #252525;
+            border-right: 1px solid #3a3a3a;
+            padding: 10px;
+        }
+
+        .vscode-editor {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .vscode-tabs {
+            display: flex;
+            background-color: #2d2d2d;
+            border-bottom: 1px solid #3a3a3a;
+        }
+
+        .vscode-tab {
+            padding: 8px 15px;
+            background-color: #1e1e1e;
+            border-right: 1px solid #3a3a3a;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .vscode-tab.active {
+            background-color: #1e1e1e;
+            border-top: 2px solid #007acc;
+        }
+
+        .vscode-code {
+            flex-grow: 1;
+            padding: 15px;
+            background-color: #1e1e1e;
+            color: #d4d4d4;
+            font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.5;
+            border: none;
+            outline: none;
+            resize: none;
+            white-space: pre;
+        }
+
+        /* 打印助手样式 */
+        .printer-container {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            gap: 15px;
+        }
+
+        .printer-section {
+            background-color: #2a2a2a;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #3a3a3a;
+        }
+
+        .printer-section h3 {
+            margin-bottom: 10px;
+            color: #007aff;
+            font-size: 14px;
+        }
+
+        /* 模式切换 */
+        .mode-switcher {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 10px;
+        }
+
+        .mode-btn {
+            flex: 1;
+            padding: 8px;
+            background-color: #3a3a3a;
+            border: 1px solid #555;
+            color: white;
+            cursor: pointer;
+            border-radius: 5px;
+            font-size: 12px;
+        }
+
+        .mode-btn.active {
+            background-color: #007aff;
+            border-color: #007aff;
+        }
+
+        .mode-content {
+            display: none;
+        }
+
+        .mode-content.active {
+            display: block;
+        }
+
+        /* 文件选择 */
+        .file-list-container {
+            max-height: 150px;
+            overflow-y: auto;
+            border: 1px solid #3a3a3a;
+            border-radius: 5px;
+            background-color: #1e1e1e;
+            margin-top: 10px;
+        }
+
+        .file-list-item {
+            display: flex;
+            align-items: center;
+            padding: 8px;
+            border-bottom: 1px solid #3a3a3a;
+            cursor: pointer;
+        }
+
+        .file-list-item:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+
+        .file-list-item:last-child {
+            border-bottom: none;
+        }
+
+        .file-list-item input[type="checkbox"] {
+            margin-right: 10px;
+        }
+
+        .file-list-item.selected {
+            background-color: rgba(0, 122, 255, 0.2);
+        }
+
+        /* 文本输入 */
+        .text-input-area {
+            width: 100%;
+            min-height: 120px;
+            background-color: #1e1e1e;
+            border: 1px solid #555;
+            color: #e0e0e0;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+            font-size: 13px;
+            resize: vertical;
+        }
+
+        .text-input-area:focus {
+            outline: none;
+            border-color: #007aff;
+        }
+
+        /* 选中文件标签 */
+        .selected-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-top: 10px;
+            min-height: 30px;
+        }
+
+        .selected-tag {
+            background-color: #3a3a3a;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .selected-tag .remove {
+            cursor: pointer;
+            color: #ff5f57;
+            font-weight: bold;
+        }
+
+        /* 应用选择 */
+        .app-selector {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .app-option {
+            background-color: #3a3a3a;
+            padding: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            border: 2px solid transparent;
+            font-size: 12px;
+            text-align: center;
+        }
+
+        .app-option.selected {
+            background-color: #007aff;
+            border-color: #007aff;
+        }
+
+        /* 循环设置 */
+        .loop-settings {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-top: 10px;
+            align-items: center;
+        }
+
+        .loop-settings label {
+            font-size: 12px;
+            color: #aaa;
+        }
+
+        .loop-settings input[type="number"] {
+            width: 80px;
+            background-color: #3a3a3a;
+            border: 1px solid #555;
+            color: white;
+            padding: 5px;
+            border-radius: 4px;
+        }
+
+        .loop-settings input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+        }
+
+        /* 控制按钮 */
+        .printer-controls {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .printer-btn {
+            border: none;
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .printer-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .printer-btn:active {
+            transform: translateY(0);
+        }
+
+        .printer-btn.primary {
+            background-color: #007aff;
+        }
+
+        .printer-btn.primary:hover {
+            background-color: #0056b3;
+        }
+
+        .printer-btn.danger {
+            background-color: #ff5f57;
+        }
+
+        .printer-btn.danger:hover {
+            background-color: #e04e46;
+        }
+
+        .printer-btn.secondary {
+            background-color: #6c757d;
+        }
+
+        .printer-btn.secondary:hover {
+            background-color: #5a6268;
+        }
+
+        .printer-btn:disabled {
+            background-color: #3a3a3a;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        /* 输出日志 */
+        .output-log {
+            background-color: #1e1e1e;
+            padding: 10px;
+            border-radius: 5px;
+            height: 150px;
+            overflow-y: auto;
+            font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+            font-size: 12px;
+            margin-top: 10px;
+            border: 1px solid #3a3a3a;
+        }
+
+        .log-entry {
+            margin: 3px 0;
+            color: #e0e0e0;
+        }
+
+        .log-entry.error {
+            color: #f48771;
+        }
+
+        .log-entry.success {
+            color: #89d185;
+        }
+
+        .log-entry.warning {
+            color: #ffd700;
+        }
+
+        .log-entry.info {
+            color: #007aff;
+        }
+
+        /* 打字进度指示器 */
+        .typing-indicator {
+            background-color: #2a2a2a;
+            padding: 8px;
+            border-radius: 5px;
+            margin-top: 10px;
+            font-size: 12px;
+            display: none;
+        }
+
+        .typing-indicator.active {
+            display: block;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 4px;
+            background-color: #3a3a3a;
+            border-radius: 2px;
+            margin-top: 5px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background-color: #007aff;
+            width: 0%;
+            transition: width 0.1s linear;
+        }
+
+        /* 循环状态指示器 */
+        .loop-indicator {
+            background-color: #2a2a2a;
+            padding: 8px;
+            border-radius: 5px;
+            margin-top: 5px;
+            font-size: 12px;
+            display: none;
+            border-left: 3px solid #ffd700;
+        }
+
+        .loop-indicator.active {
+            display: block;
+        }
+
+        /* 右键菜单 */
+        .context-menu {
+            position: absolute;
+            background-color: rgba(40, 40, 40, 0.95);
+            border-radius: 6px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+            padding: 5px 0;
+            min-width: 150px;
+            display: none;
+            z-index: 1000;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .context-menu-item {
+            padding: 8px 15px;
+            font-size: 13px;
+            cursor: pointer;
+        }
+
+        .context-menu-item:hover {
+            background-color: rgba(255, 255, 255, 0.15);
+        }
+
+        .context-menu-separator {
+            height: 1px;
+            background-color: rgba(255, 255, 255, 0.1);
+            margin: 5px 0;
+        }
+
+        /* 壁纸选择器 */
+        .wallpaper-selector {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(40, 40, 40, 0.95);
+            border-radius: 10px;
+            padding: 20px;
+            width: 400px;
+            display: none;
+            z-index: 2000;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .wallpaper-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .wallpaper-option {
+            height: 80px;
+            border-radius: 5px;
+            cursor: pointer;
+            background-size: cover;
+            background-position: center;
+            border: 2px solid transparent;
+        }
+
+        .wallpaper-option:hover {
+            border-color: #007aff;
+        }
+
+        .wallpaper-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .close-wallpaper {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 18px;
+            cursor: pointer;
+        }
+
+        /* 输入框 */
+        input[type="text"], input[type="number"], input[type="file"] {
+            background-color: #3a3a3a;
+            border: 1px solid #555;
+            color: white;
+            padding: 8px;
+            border-radius: 5px;
+            width: 100%;
+            margin: 5px 0;
+            font-size: 13px;
+        }
+
+        input[type="text"]:focus, input[type="number"]:focus {
+            outline: none;
+            border-color: #007aff;
+        }
+
+        /* 滚动条 */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.1);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        /* 动画效果 */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .window.opening {
+            animation: fadeIn 0.2s ease-out;
+        }
+
+        /* 状态栏时间 */
+        #clock {
+            font-family: 'SF Pro Text', -apple-system, BlinkMacSystemFont, sans-serif;
+            font-weight: 500;
+            font-size: 13px;
+        }
+
+        /* 提示信息 */
+        .info-box {
+            background-color: #2a2a2a;
+            border-left: 3px solid #007aff;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            font-size: 12px;
+            line-height: 1.5;
+            color: #aaa;
+        }
+
+        /* 文本编辑器保存状态 */
+        .save-status {
+            font-size: 11px;
+            color: #888;
+            margin-left: 10px;
+        }
+
+        .save-status.saved {
+            color: #89d185;
+        }
+
+        /* 文本编辑器顶部工具栏 */
+        .textedit-toolbar {
+            padding: 5px 10px;
+            background: #2d2d2d;
+            font-size: 12px;
+            border-top: 1px solid #3a3a3a;
+            display: flex;
+            align-items: center;
+        }
+
+        /* 终端打字效果 */
+        .typing-cursor {
+            display: inline-block;
+            width: 8px;
+            height: 14px;
+            background-color: #00ff00;
+            animation: blink 1s infinite;
+            vertical-align: text-bottom;
+            margin-left: 2px;
+        }
+
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+
+        /* 文本编辑器光标 */
+        .cursor-visible {
+            caret-color: #00ff00;
+        }
+
+        /* 保存对话框样式 */
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 2999;
+            display: none;
+        }
+
+        .overlay.show {
+            display: block;
+        }
+
+        .save-dialog, .confirm-dialog, .about-dialog {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #2a2a2a;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            z-index: 3000;
+            display: none;
+            border: 1px solid #3a3a3a;
+        }
+
+        .save-dialog {
+            width: 300px;
+        }
+
+        .confirm-dialog {
+            width: 350px;
+        }
+
+        .about-dialog {
+            width: 350px;
+        }
+
+        .save-dialog.show, .confirm-dialog.show, .about-dialog.show {
+            display: block;
+        }
+
+        .save-dialog h4, .confirm-dialog h4, .about-dialog h4 {
+            margin-bottom: 15px;
+            color: #007aff;
+        }
+
+        .confirm-dialog h4 {
+            color: #ff5f57;
+        }
+
+        .about-dialog h4 {
+            color: #007aff;
+        }
+
+        .save-dialog input {
+            width: 100%;
+            padding: 8px;
+            background-color: #1e1e1e;
+            border: 1px solid #555;
+            color: white;
+            border-radius: 5px;
+            margin-bottom: 15px;
+        }
+
+        .confirm-dialog p, .about-dialog p {
+            margin-bottom: 20px;
+            color: #aaa;
+            font-size: 13px;
+        }
+
+        .save-dialog-buttons, .confirm-dialog-buttons, .about-dialog-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+
+        .save-dialog-buttons button, .confirm-dialog-buttons button, .about-dialog-buttons button {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .save-dialog-buttons button:first-child,
+        .confirm-dialog-buttons button:first-child {
+            background-color: #6c757d;
+            color: white;
+        }
+
+        .save-dialog-buttons button:last-child,
+        .confirm-dialog-buttons button:last-child {
+            background-color: #007aff;
+            color: white;
+        }
+
+        .confirm-dialog-buttons button:last-child {
+            background-color: #ff5f57;
+        }
+
+        .about-dialog-buttons button {
+            background-color: #007aff;
+            color: white;
+        }
+
+        /* 应用清空提示 */
+        .workspace-cleared {
+            background-color: #2a2a2a;
+            border: 1px dashed #007aff;
+            padding: 15px;
+            border-radius: 5px;
+            text-align: center;
+            color: #aaa;
+            margin-bottom: 10px;
+            font-size: 13px;
+        }
+
+        /* 循环状态指示器 - 优化显示 */
+        .loop-status-text {
+            font-weight: bold;
+            color: #ffd700;
+        }
+
+        /* 打印助手应用状态指示器 */
+        .app-status-indicator {
+            background-color: #2a2a2a;
+            padding: 8px;
+            border-radius: 5px;
+            margin-top: 5px;
+            font-size: 12px;
+            border-left: 3px solid #007aff;
+        }
+
+        /* 窗口拖拽时的光标 */
+        .window-header.dragging {
+            cursor: grabbing;
+        }
+
+        /* 快捷键提示 */
+        .shortcut-hint {
+            font-size: 11px;
+            color: #888;
+            margin-left: auto;
+            padding-left: 10px;
+        }
+
+        /* 全屏时的特殊样式 */
+        body.fullscreen-mode {
+            background-color: #000;
+        }
+
+        body.fullscreen-mode #menu-bar {
+            background-color: rgba(0, 0, 0, 0.95);
+        }
+
+        body.fullscreen-mode .window {
+            box-shadow: 0 0 50px rgba(0, 0, 0, 0.8);
+        }
+
+        /* 浏览器全屏提示 */
+        .fullscreen-hint {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 5px;
+            font-size: 12px;
+            display: none;
+            z-index: 9999;
+        }
+
+        .fullscreen-hint.show {
+            display: block;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        /* 新增：文件名输入框样式 */
+        .filename-input {
+            margin-top: 10px;
+            display: none;
+        }
+
+        .filename-input.active {
+            display: block;
+        }
+
+        .filename-input label {
+            font-size: 12px;
+            color: #aaa;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .filename-input input {
+            width: 100%;
+            padding: 8px;
+            background-color: #1e1e1e;
+            border: 1px solid #555;
+            color: white;
+            border-radius: 5px;
+            font-size: 13px;
+        }
+
+        .filename-input input:focus {
+            outline: none;
+            border-color: #007aff;
+        }
+
+        .filename-input input::placeholder {
+            color: #666;
+        }
+
+        /* 文件名输入提示 */
+        .filename-hint {
+            font-size: 11px;
+            color: #888;
+            margin-top: 3px;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <!-- 菜单栏 -->
+    <div id="menu-bar">
+        <div class="menu-left">
+            <!-- 苹果菜单（带下拉）- 使用Mac图标 -->
+            <div class="menu-item" id="apple-menu-item"></div>
+            <div class="menu-dropdown" id="apple-menu">
+                <div class="menu-item" onclick="showAbout()">关于 macOS 模拟器</div>
+                <div class="menu-separator"></div>
+                <div class="menu-item" id="fullscreen-menu-item" onclick="toggleBrowserFullscreen()">全屏 <span class="shortcut-hint">⌘F</span></div>
+                <div class="menu-item" onclick="showWallpaperSelector()">更换壁纸</div>
+                <div class="menu-separator"></div>
+                <div class="menu-item" onclick="openApp('settings')">系统设置</div>
+            </div>
+
+            <!-- Finder菜单（带下拉） -->
+            <div class="menu-item" id="finder-menu-item">Finder</div>
+            <div class="menu-dropdown" id="finder-menu">
+                <div class="menu-item" onclick="openApp('finder')">打开 Finder</div>
+                <div class="menu-item" onclick="createNewFile()">新建文件</div>
+                <div class="menu-item" onclick="createNewFolder()">新建文件夹</div>
+                <div class="menu-separator"></div>
+                <div class="menu-item" onclick="navigateTo('desktop')">前往桌面</div>
+                <div class="menu-item" onclick="navigateTo('documents')">前往文稿</div>
+            </div>
+
+            <!-- 其他菜单项（保持原始功能） -->
+            <div class="menu-item">文件</div>
+            <div class="menu-item">编辑</div>
+            <div class="menu-item">显示</div>
+            <div class="menu-item">前往</div>
+            <div class="menu-item">窗口</div>
+            <div class="menu-item">帮助</div>
+        </div>
+        <div class="menu-right">
+            <div class="menu-item" id="wallpaper-btn">壁纸</div>
+            <div class="menu-item" id="clock">--:--</div>
+        </div>
+    </div>
+
+    <!-- 桌面区域 -->
+    <div id="desktop" style="background-image: url('https://images.unsplash.com/photo-1506744038136-46273834b3fb?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80')">
+        <!-- 桌面图标 -->
+        <div class="desktop-icon" style="top: 30px; left: 30px;" onclick="openApp('finder')">
+            <div class="icon-container" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">🔍</div>
+            <span>Finder</span>
+        </div>
+        <div class="desktop-icon" style="top: 130px; left: 30px;" onclick="openApp('terminal')">
+            <div class="icon-container" style="background: linear-gradient(135deg, #2c3e50 0%, #000000 100%);">⌘</div>
+            <span>终端</span>
+        </div>
+        <div class="desktop-icon" style="top: 230px; left: 30px;" onclick="openApp('vscode')">
+            <div class="icon-container" style="background: linear-gradient(135deg, #007acc 0%, #00c6ff 100%);">📝</div>
+            <span>VS Code</span>
+        </div>
+        <div class="desktop-icon" style="top: 30px; left: 130px;" onclick="openApp('textedit')">
+            <div class="icon-container" style="background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);">📄</div>
+            <span>文本编辑</span>
+        </div>
+        <div class="desktop-icon" style="top: 130px; left: 130px;" onclick="openApp('printer')">
+            <div class="icon-container" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">🖨️</div>
+            <span>打印助手</span>
+        </div>
+
+        <!-- Dock栏 -->
+        <div id="dock">
+            <div class="dock-item" onclick="openApp('finder')">🔍</div>
+            <div class="dock-item" onclick="openApp('terminal')">⌘</div>
+            <div class="dock-item" onclick="openApp('vscode')">📝</div>
+            <div class="dock-item" onclick="openApp('textedit')">📄</div>
+            <div class="dock-item" onclick="openApp('printer')">🖨️</div>
+            <div class="dock-item" onclick="openApp('settings')">⚙️</div>
+        </div>
+    </div>
+
+    <!-- 终端窗口 -->
+    <div id="terminal-window" class="window" style="width: 700px; height: 500px; top: 100px; left: 200px;">
+        <div class="window-header">
+            <div class="window-buttons">
+                <div class="window-button close-btn" onclick="closeWindow('terminal')"></div>
+                <div class="window-button minimize-btn" onclick="minimizeWindow('terminal')"></div>
+                <div class="window-button maximize-btn" onclick="maximizeWindow('terminal')"></div>
+            </div>
+            <div class="window-title">终端</div>
+        </div>
+        <div class="window-content" id="terminal-content">
+            <div class="terminal-line">macOS 模拟终端 v1.0</div>
+            <div class="terminal-line">输入 "help" 查看可用命令</div>
+            <div class="terminal-line">----------------------------------------</div>
+            <div class="terminal-input">
+                <span class="terminal-prompt">MacBook-Pro:~ user$</span>
+                <input type="text" class="terminal-input-field" id="terminal-input" autofocus autocomplete="off">
+            </div>
+        </div>
+    </div>
+
+    <!-- Finder窗口 -->
+    <div id="finder-window" class="window" style="width: 700px; height: 500px; top: 80px; left: 250px;">
+        <div class="window-header">
+            <div class="window-buttons">
+                <div class="window-button close-btn" onclick="closeWindow('finder')"></div>
+                <div class="window-button minimize-btn" onclick="minimizeWindow('finder')"></div>
+                <div class="window-button maximize-btn" onclick="maximizeWindow('finder')"></div>
+            </div>
+            <div class="window-title">Finder - 用户</div>
+        </div>
+        <div class="window-content">
+            <div class="finder-container">
+                <div class="finder-sidebar">
+                    <div style="font-weight: bold; margin-bottom: 10px;">收藏</div>
+                    <div class="finder-item" onclick="navigateTo('desktop')">
+                        <span>📁</span>
+                        <span>桌面</span>
+                    </div>
+                    <div class="finder-item" onclick="navigateTo('documents')">
+                        <span>📄</span>
+                        <span>文稿</span>
+                    </div>
+                    <div class="finder-item" onclick="navigateTo('downloads')">
+                        <span>⬇️</span>
+                        <span>下载</span>
+                    </div>
+                    <div class="finder-item" onclick="navigateTo('pictures')">
+                        <span>🖼️</span>
+                        <span>图片</span>
+                    </div>
+                </div>
+                <div class="finder-main">
+                    <div class="finder-toolbar">
+                        <button class="finder-btn" onclick="createNewFile()">新建文件</button>
+                        <button class="finder-btn" onclick="createNewFolder()">新建文件夹</button>
+                        <button class="finder-btn" onclick="goBack()">返回</button>
+                    </div>
+                    <div id="finder-path" style="margin-bottom: 10px; color: #888; font-size: 12px;">路径: /用户/桌面</div>
+                    <div id="finder-file-list">
+                        <!-- 文件列表将在这里动态生成 -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- VS Code窗口 -->
+    <div id="vscode-window" class="window" style="width: 800px; height: 600px; top: 60px; left: 150px;">
+        <div class="window-header">
+            <div class="window-buttons">
+                <div class="window-button close-btn" onclick="closeWindow('vscode')"></div>
+                <div class="window-button minimize-btn" onclick="minimizeWindow('vscode')"></div>
+                <div class="window-button maximize-btn" onclick="maximizeWindow('vscode')"></div>
+            </div>
+            <div class="window-title">Visual Studio Code</div>
+        </div>
+        <div class="window-content" style="padding: 0;">
+            <div class="vscode-container">
+                <div class="vscode-sidebar">
+                    <div style="font-weight: bold; margin-bottom: 10px;">资源管理器</div>
+                    <div id="vscode-file-list">
+                        <!-- 文件列表 -->
+                    </div>
+                </div>
+                <div class="vscode-editor">
+                    <div class="vscode-tabs">
+                        <div class="vscode-tab active" id="vscode-active-tab">未命名</div>
+                    </div>
+                    <textarea class="vscode-code" id="vscode-editor" placeholder="在此输入代码..."></textarea>
+                    <div style="padding: 5px 10px; background: #2d2d2d; font-size: 12px; border-top: 1px solid #3a3a3a;">
+                        <button class="finder-btn" onclick="saveVSCodeFile()">保存</button>
+                        <button class="finder-btn" onclick="createVSCodeFile()">新建文件</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 文本编辑窗口 -->
+    <div id="textedit-window" class="window" style="width: 600px; height: 400px; top: 120px; left: 300px;">
+        <div class="window-header">
+            <div class="window-buttons">
+                <div class="window-button close-btn" onclick="closeWindow('textedit')"></div>
+                <div class="window-button minimize-btn" onclick="minimizeWindow('textedit')"></div>
+                <div class="window-button maximize-btn" onclick="maximizeWindow('textedit')"></div>
+            </div>
+            <div class="window-title">文本编辑</div>
+        </div>
+        <div class="window-content" style="padding: 0; display: flex; flex-direction: column;">
+            <textarea id="textedit-editor" style="flex: 1; background: #1e1e1e; color: #e0e0e0; border: none; padding: 15px; font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace; font-size: 14px; line-height: 1.5; resize: none;" placeholder="在此输入文本..."></textarea>
+            <div class="textedit-toolbar">
+                <button class="finder-btn" onclick="showSaveDialog()">保存为新文件</button>
+                <button class="finder-btn" onclick="saveTextEdit()">保存</button>
+                <span id="textedit-status" class="save-status"></span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 打印助手窗口 -->
+    <div id="printer-window" class="window" style="width: 650px; height: 700px; top: 100px; left: 300px;">
+        <div class="window-header">
+            <div class="window-buttons">
+                <div class="window-button close-btn" onclick="closeWindow('printer')"></div>
+                <div class="window-button minimize-btn" onclick="minimizeWindow('printer')"></div>
+                <div class="window-button maximize-btn" onclick="maximizeWindow('printer')"></div>
+            </div>
+            <div class="window-title">打印助手 - 模拟输入处理器</div>
+        </div>
+        <div class="window-content">
+            <div class="printer-container">
+                <!-- 步骤1: 选择模式 -->
+                <div class="printer-section">
+                    <h3>步骤1: 选择输入模式</h3>
+                    <div class="mode-switcher">
+                        <button class="mode-btn active" onclick="switchMode('file')">📁 文件模式</button>
+                        <button class="mode-btn" onclick="switchMode('text')">📝 文本模式</button>
+                    </div>
+
+                    <!-- 文件模式 -->
+                    <div id="file-mode" class="mode-content active">
+                        <div class="info-box">
+                            从当前目录选择文件，内容将逐字输入到目标应用。
+                        </div>
+                        <div class="file-list-container" id="file-list-container">
+                            <!-- 文件列表将在这里生成 -->
+                        </div>
+                        <div class="selected-tags" id="selected-files-tags"></div>
+                    </div>
+
+                    <!-- 文本模式 -->
+                    <div id="text-mode" class="mode-content">
+                        <div class="info-box">
+                            直接输入文本内容，将逐字输入到目标应用。
+                        </div>
+                        <textarea class="text-input-area" id="text-input-area" placeholder="在此输入要处理的文本..."></textarea>
+                        
+                        <!-- 文件名输入框 -->
+                        <div class="filename-input" id="filename-input">
+                            <label for="custom-filename">保存文件名（可选）:</label>
+                            <input type="text" id="custom-filename" placeholder="例如: 我的文档.txt">
+                            <div class="filename-hint">处理完成后会自动保存为文件到当前目录</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 步骤2: 设置目标应用 -->
+                <div class="printer-section">
+                    <h3>步骤2: 设置目标应用</h3>
+                    <div class="app-selector" id="app-selector">
+                        <div class="app-option" data-app="terminal">终端</div>
+                        <div class="app-option" data-app="vscode">VS Code</div>
+                        <div class="app-option" data-app="textedit">文本编辑</div>
+                        <div class="app-option" data-app="finder">Finder (预览)</div>
+                    </div>
+                    <div class="loop-settings">
+                        <label>循环次数:</label>
+                        <input type="number" id="loop-count" value="1" min="1" max="10">
+                        <label>间隔(ms):</label>
+                        <input type="number" id="loop-delay" value="1000" min="100" max="5000" step="100">
+                        <label style="grid-column: 1 / -1;">
+                            <input type="checkbox" id="loop-enabled"> 启用循环处理
+                        </label>
+                    </div>
+                    <div class="loop-indicator" id="loop-indicator">
+                        <span id="loop-status">准备循环...</span>
+                    </div>
+                    <div class="app-status-indicator" id="app-status-indicator" style="display: none;">
+                        <span id="app-status-text"></span>
+                    </div>
+                </div>
+
+                <!-- 步骤3: 打字设置 -->
+                <div class="printer-section">
+                    <h3>步骤3: 打字设置</h3>
+                    <div class="loop-settings">
+                        <label>字间隔(ms):</label>
+                        <input type="number" id="char-delay" value="50" min="10" max="500" step="10">
+                        <label>行间隔(ms):</label>
+                        <input type="number" id="line-delay" value="500" min="100" max="2000" step="100">
+                        <label style="grid-column: 1 / -1;">
+                            <input type="checkbox" id="clear-workspace" checked> 清空工作区（仅首次）
+                        </label>
+                    </div>
+                </div>
+
+                <!-- 步骤4: 启动处理 -->
+                <div class="printer-section">
+                    <h3>步骤4: 启动处理</h3>
+                    <div class="printer-controls">
+                        <button class="printer-btn primary" id="start-btn" onclick="startProcessing()">🚀 开始处理</button>
+                        <button class="printer-btn danger" onclick="stopProcessing()">⏹ 停止</button>
+                        <button class="printer-btn secondary" onclick="clearQueue()">🗑 清空</button>
+                    </div>
+                    <div class="typing-indicator" id="typing-indicator">
+                        <div>打字进度: <span id="typing-status">等待中...</span></div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="typing-progress"></div>
+                        </div>
+                    </div>
+                    <div class="output-log" id="output-log">
+                        <div class="log-entry info">准备就绪...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 设置窗口 -->
+    <div id="settings-window" class="window" style="width: 400px; height: 300px; top: 150px; left: 350px;">
+        <div class="window-header">
+            <div class="window-buttons">
+                <div class="window-button close-btn" onclick="closeWindow('settings')"></div>
+                <div class="window-button minimize-btn" onclick="minimizeWindow('settings')"></div>
+                <div class="window-button maximize-btn" onclick="maximizeWindow('settings')"></div>
+            </div>
+            <div class="window-title">系统设置</div>
+        </div>
+        <div class="window-content">
+            <h3>壁纸设置</h3>
+            <p>选择您喜欢的壁纸</p>
+            <button class="finder-btn" onclick="showWallpaperSelector()" style="margin: 10px 0;">打开壁纸选择器</button>
+            
+            <h3 style="margin-top: 20px;">系统信息</h3>
+            <p>macOS 模拟器 v2.0</p>
+            <p>基于 HTML/CSS/JavaScript 构建</p>
+            <p>新增: 浏览器全屏功能</p>
+            <p style="margin-top: 10px; color: #888; font-size: 12px;">功能: 苹果菜单控制浏览器全屏</p>
+        </div>
+    </div>
+
+    <!-- 壁纸选择器 -->
+    <div id="wallpaper-selector" class="wallpaper-selector">
+        <div class="wallpaper-header">
+            <h3>选择壁纸</h3>
+            <button class="close-wallpaper" onclick="hideWallpaperSelector()">✕</button>
+        </div>
+        <div class="wallpaper-grid">
+            <div class="wallpaper-option" style="background-image: url('https://images.unsplash.com/photo-1506744038136-46273834b3fb?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80')" onclick="changeWallpaper('https://images.unsplash.com/photo-1506744038136-46273834b3fb?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80')"></div>
+            <div class="wallpaper-option" style="background-image: url('https://images.unsplash.com/photo-1470770903676-69b98201ea1c?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80')" onclick="changeWallpaper('https://images.unsplash.com/photo-1470770903676-69b98201ea1c?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80')"></div>
+            <div class="wallpaper-option" style="background-image: url('https://images.unsplash.com/photo-1501785888041-af3ef285b470?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80')" onclick="changeWallpaper('https://images.unsplash.com/photo-1501785888041-af3ef285b470?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80')"></div>
+            <div class="wallpaper-option" style="background-image: url('https://images.unsplash.com/photo-1469474968028-56623f02e42e?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80')" onclick="changeWallpaper('https://images.unsplash.com/photo-1469474968028-56623f02e42e?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80')"></div>
+            <div class="wallpaper-option" style="background-image: url('https://images.unsplash.com/photo-1493246507139-91e8fad9978e?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80')" onclick="changeWallpaper('https://images.unsplash.com/photo-1493246507139-91e8fad9978e?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80')"></div>
+            <div class="wallpaper-option" style="background-image: url('https://images.unsplash.com/photo-1507525428034-b723cf961d3e?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80')" onclick="changeWallpaper('https://images.unsplash.com/photo-1507525428034-b723cf961d3e?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80')"></div>
+        </div>
+    </div>
+
+    <!-- 右键菜单 -->
+    <div id="context-menu" class="context-menu">
+        <div class="context-menu-item" onclick="contextAction('open')">打开</div>
+        <div class="context-menu-item" onclick="contextAction('rename')">重命名</div>
+        <div class="context-menu-separator"></div>
+        <div class="context-menu-item" onclick="contextAction('delete')">删除</div>
+    </div>
+
+    <!-- 保存对话框 -->
+    <div class="overlay" id="overlay"></div>
+    <div class="save-dialog" id="save-dialog">
+        <h4>保存为新文件</h4>
+        <input type="text" id="new-filename" placeholder="输入文件名（如：新文件.txt）">
+        <div class="save-dialog-buttons">
+            <button onclick="cancelSave()">取消</button>
+            <button onclick="confirmSave()">保存</button>
+        </div>
+    </div>
+
+    <!-- 覆盖确认对话框 -->
+    <div class="confirm-dialog" id="confirm-dialog">
+        <h4>文件已存在</h4>
+        <p id="confirm-message">文件已存在，是否覆盖？</p>
+        <div class="confirm-dialog-buttons">
+            <button onclick="cancelOverwrite()">取消</button>
+            <button onclick="confirmOverwrite()">覆盖</button>
+        </div>
+    </div>
+
+    <!-- 关于对话框 -->
+    <div class="about-dialog" id="about-dialog">
+        <h4>关于 macOS 模拟器</h4>
+        <p>版本: 2.0</p>
+        <p>基于 HTML/CSS/JavaScript 构建的完整桌面环境模拟器</p>
+        <p style="margin-top: 10px; color: #aaa; font-size: 12px;">新增功能: 浏览器全屏控制</p>
+        <div class="about-dialog-buttons">
+            <button onclick="closeAboutDialog()">确定</button>
+        </div>
+    </div>
+
+    <!-- 浏览器全屏提示 -->
+    <div class="fullscreen-hint" id="fullscreen-hint">
+        按 ESC 键退出全屏
+    </div>
+
+    <script>
+        // 虚拟文件系统
+        const fileSystem = {
+            desktop: [
+                { name: '欢迎.txt', type: 'file', content: '欢迎使用 macOS 模拟器！\n\n这是一个功能完整的模拟操作系统。\n\n您可以：\n1. 使用终端执行命令\n2. 在Finder中管理文件\n3. 使用VS Code编辑代码\n4. 更换壁纸\n5. 使用打印助手处理文件\n\n试试输入 "help" 查看终端命令！' },
+                { name: '项目', type: 'folder', children: [] },
+                { name: '笔记.md', type: 'file', content: '# 我的笔记\n\n## 待办事项\n- [ ] 探索终端功能\n- [ ] 创建新文件\n- [ ] 编写代码\n- [ ] 使用打印助手' },
+                { name: '示例数据.json', type: 'file', content: '{\n  "name": "示例项目",\n  "version": "1.0.0",\n  "description": "这是一个示例JSON文件"\n}' }
+            ],
+            documents: [
+                { name: '报告.docx', type: 'file', content: '这是一份文档内容\n包含多个段落\n可以用于测试打印助手' },
+                { name: '学习', type: 'folder', children: [] }
+            ],
+            downloads: [
+                { name: '安装程序.dmg', type: 'file', content: '安装程序数据' }
+            ],
+            pictures: [
+                { name: '照片1.jpg', type: 'file', content: '图片数据' },
+                { name: '照片2.jpg', type: 'file', content: '图片数据' }
+            ]
+        };
+
+        // 当前路径
+        let currentPath = 'desktop';
+        let currentFiles = fileSystem.desktop;
+
+        // 终端命令历史
+        let commandHistory = [];
+        let historyIndex = -1;
+
+        // VS Code当前文件
+        let vscodeCurrentFile = null;
+
+        // 打印助手状态
+        let printerState = {
+            mode: 'file', // 'file' 或 'text'
+            selectedFiles: [],
+            textContent: '',
+            targetApp: null,
+            isProcessing: false,
+            loopCount: 1,
+            loopDelay: 1000,
+            loopEnabled: false,
+            currentLoop: 0,
+            charDelay: 50,
+            lineDelay: 500,
+            clearWorkspace: true,
+            typingTimer: null,
+            currentContentIndex: 0,
+            resolveCallback: null,
+            appOpened: false,
+            customFilename: '' // 自定义文件名
+        };
+
+        // 文本编辑器状态
+        let textEditState = {
+            currentFile: null,
+            isDirty: false,
+            saveCallback: null
+        };
+
+        // 覆盖确认状态
+        let confirmState = {
+            fileName: '',
+            content: '',
+            isOverwrite: false
+        };
+
+        // 窗口全屏状态存储
+        const windowFullscreenState = {};
+
+        // 当前活动窗口
+        let currentActiveWindow = null;
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            updateClock();
+            setInterval(updateClock, 1000);
+            
+            // 终端输入处理
+            const terminalInput = document.getElementById('terminal-input');
+            if (terminalInput) {
+                terminalInput.addEventListener('keydown', handleTerminalInput);
+            }
+            
+            // 桌面右键菜单
+            document.getElementById('desktop').addEventListener('contextmenu', showContextMenu);
+            document.addEventListener('click', hideContextMenu);
+            
+            // 窗口拖拽
+            setupWindowDragging();
+            
+            // 更新Finder文件列表
+            updateFinderFileList();
+            
+            // 更新VS Code文件列表
+            updateVSCodeFileList();
+            
+            // 文本编辑器输入监听
+            const textEditEditor = document.getElementById('textedit-editor');
+            if (textEditEditor) {
+                textEditEditor.addEventListener('input', function() {
+                    textEditState.isDirty = true;
+                    updateTextEditStatus('未保存');
+                });
+            }
+
+            // 打印助手应用选择
+            document.getElementById('app-selector').addEventListener('click', function(e) {
+                if (e.target.classList.contains('app-option')) {
+                    document.querySelectorAll('.app-option').forEach(opt => opt.classList.remove('selected'));
+                    e.target.classList.add('selected');
+                    printerState.targetApp = e.target.dataset.app;
+                    addLog(`目标应用设置为: ${printerState.targetApp}`, 'success');
+                }
+            });
+
+            // 循环设置变化监听
+            document.getElementById('loop-enabled').addEventListener('change', function() {
+                const indicator = document.getElementById('loop-indicator');
+                if (this.checked) {
+                    indicator.classList.add('active');
+                    updateLoopStatus('循环已启用');
+                } else {
+                    indicator.classList.remove('active');
+                    updateLoopStatus('循环已禁用');
+                }
+            });
+
+            // 文件名输入框变化监听
+            const filenameInput = document.getElementById('custom-filename');
+            if (filenameInput) {
+                filenameInput.addEventListener('input', function() {
+                    printerState.customFilename = this.value.trim();
+                    if (printerState.customFilename) {
+                        addLog(`自定义文件名设置为: ${printerState.customFilename}`, 'info');
+                    }
+                });
+            }
+
+            // 文件名输入框回车事件
+            document.getElementById('new-filename').addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    confirmSave();
+                }
+            });
+
+            // 菜单栏下拉菜单功能
+            setupMenuBar();
+
+            // 浏览器全屏状态监听
+            setupFullscreenListener();
+        });
+
+        // 设置菜单栏
+        function setupMenuBar() {
+            // 苹果菜单
+            const appleMenuItem = document.getElementById('apple-menu-item');
+            const appleMenu = document.getElementById('apple-menu');
+            
+            appleMenuItem.addEventListener('click', function(e) {
+                e.stopPropagation();
+                toggleDropdown(appleMenu);
+            });
+
+            // Finder菜单
+            const finderMenuItem = document.getElementById('finder-menu-item');
+            const finderMenu = document.getElementById('finder-menu');
+            
+            finderMenuItem.addEventListener('click', function(e) {
+                e.stopPropagation();
+                toggleDropdown(finderMenu);
+            });
+
+            // 点击其他地方关闭所有下拉菜单
+            document.addEventListener('click', function() {
+                hideAllDropdowns();
+            });
+
+            // 键盘快捷键
+            document.addEventListener('keydown', function(e) {
+                // Cmd/Ctrl + F 全屏
+                if ((e.metaKey || e.ctrlKey) && e.key === 'f') {
+                    e.preventDefault();
+                    toggleBrowserFullscreen();
+                }
+            });
+        }
+
+        // 设置全屏监听器
+        function setupFullscreenListener() {
+            document.addEventListener('fullscreenchange', function() {
+                updateFullscreenMenuState();
+                
+                // 显示/隐藏提示
+                const hint = document.getElementById('fullscreen-hint');
+                if (document.fullscreenElement) {
+                    hint.classList.add('show');
+                    document.body.classList.add('fullscreen-mode');
+                    // 3秒后自动隐藏提示
+                    setTimeout(() => {
+                        hint.classList.remove('show');
+                    }, 3000);
+                } else {
+                    hint.classList.remove('show');
+                    document.body.classList.remove('fullscreen-mode');
+                }
+            });
+
+            // ESC键退出全屏时也更新状态
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && document.fullscreenElement) {
+                    updateFullscreenMenuState();
+                }
+            });
+        }
+
+        // 切换浏览器全屏
+        function toggleBrowserFullscreen() {
+            hideAllDropdowns();
+            
+            if (!document.fullscreenElement) {
+                // 进入全屏
+                document.documentElement.requestFullscreen().catch(err => {
+                    alert(`无法进入全屏模式: ${err.message}\n\n提示: 部分浏览器可能限制自动全屏，请手动按F11或使用浏览器菜单。`);
+                });
+            } else {
+                // 退出全屏
+                document.exitFullscreen();
+            }
+        }
+
+        // 更新全屏菜单状态
+        function updateFullscreenMenuState() {
+            const fullscreenMenuItem = document.getElementById('fullscreen-menu-item');
+            if (!fullscreenMenuItem) return;
+            
+            if (document.fullscreenElement) {
+                fullscreenMenuItem.textContent = '退出全屏 ⌘F';
+            } else {
+                fullscreenMenuItem.textContent = '全屏 ⌘F';
+            }
+        }
+
+        // 切换下拉菜单
+        function toggleDropdown(menu) {
+            const isVisible = menu.classList.contains('show');
+            hideAllDropdowns();
+            if (!isVisible) {
+                menu.classList.add('show');
+            }
+        }
+
+        // 隐藏所有下拉菜单
+        function hideAllDropdowns() {
+            document.querySelectorAll('.menu-dropdown').forEach(menu => {
+                menu.classList.remove('show');
+            });
+        }
+
+        // 显示关于对话框
+        function showAbout() {
+            hideAllDropdowns();
+            const overlay = document.getElementById('overlay');
+            const dialog = document.getElementById('about-dialog');
+            overlay.classList.add('show');
+            dialog.classList.add('show');
+        }
+
+        // 关闭关于对话框
+        function closeAboutDialog() {
+            const overlay = document.getElementById('overlay');
+            const dialog = document.getElementById('about-dialog');
+            overlay.classList.remove('show');
+            dialog.classList.remove('show');
+        }
+
+        // 更新时钟
+        function updateClock() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
+            document.getElementById('clock').textContent = timeString;
+        }
+
+        // 打开应用
+        function openApp(appName) {
+            const windowId = `${appName}-window`;
+            const window = document.getElementById(windowId);
+            if (window) {
+                window.style.display = 'block';
+                window.classList.add('opening');
+                setTimeout(() => window.classList.remove('opening'), 200);
+                
+                // 设置为活动窗口
+                setActiveWindow(appName);
+                
+                // 如果是终端，聚焦输入框
+                if (appName === 'terminal') {
+                    const input = document.getElementById('terminal-input');
+                    if (input) input.focus();
+                }
+                
+                // 如果是打印助手，更新UI
+                if (appName === 'printer') {
+                    updatePrinterFileList();
+                    updatePrinterUI();
+                }
+            }
+        }
+
+        // 设置活动窗口
+        function setActiveWindow(appName) {
+            // 移除所有窗口的活动状态
+            document.querySelectorAll('.window').forEach(w => w.classList.remove('active'));
+            
+            // 添加活动状态到指定窗口
+            const window = document.getElementById(`${appName}-window`);
+            if (window) {
+                window.classList.add('active');
+                currentActiveWindow = appName;
+            }
+        }
+
+        // 关闭窗口
+        function closeWindow(appName) {
+            const window = document.getElementById(`${appName}-window`);
+            if (window) {
+                window.style.display = 'none';
+                
+                // 如果关闭的是当前活动窗口，清除活动状态
+                if (currentActiveWindow === appName) {
+                    window.classList.remove('active');
+                    currentActiveWindow = null;
+                }
+                
+                // 如果是文本编辑器，检查未保存内容
+                if (appName === 'textedit' && textEditState.isDirty) {
+                    if (confirm('有未保存的更改，是否保存？')) {
+                        saveTextEdit();
+                    }
+                    textEditState.isDirty = false;
+                    updateTextEditStatus('');
+                }
+            }
+        }
+
+        // 最小化窗口
+        function minimizeWindow(appName) {
+            const window = document.getElementById(`${appName}-window`);
+            if (window) {
+                window.style.opacity = '0.5';
+                setTimeout(() => {
+                    window.style.opacity = '1';
+                }, 300);
+            }
+        }
+
+        // 最大化窗口
+        function maximizeWindow(appName) {
+            const window = document.getElementById(`${appName}-window`);
+            if (window) {
+                if (window.style.width === '100%') {
+                    // 恢复原大小
+                    window.style.width = window.dataset.originalWidth || '700px';
+                    window.style.height = window.dataset.originalHeight || '500px';
+                    window.style.top = window.dataset.originalTop || '100px';
+                    window.style.left = window.dataset.originalLeft || '200px';
+                } else {
+                    // 保存原大小
+                    window.dataset.originalWidth = window.style.width;
+                    window.dataset.originalHeight = window.style.height;
+                    window.dataset.originalTop = window.style.top;
+                    window.dataset.originalLeft = window.style.left;
+                    
+                    // 最大化
+                    window.style.width = '100%';
+                    window.style.height = 'calc(100% - 40px)';
+                    window.style.top = '40px';
+                    window.style.left = '0';
+                }
+            }
+        }
+
+        // 窗口拖拽
+        function setupWindowDragging() {
+            const windows = document.querySelectorAll('.window');
+            windows.forEach(window => {
+                const header = window.querySelector('.window-header');
+                let isDragging = false;
+                let startX, startY, startLeft, startTop;
+
+                header.addEventListener('mousedown', function(e) {
+                    if (e.target.classList.contains('window-button')) return;
+                    isDragging = true;
+                    startX = e.clientX;
+                    startY = e.clientY;
+                    startLeft = parseInt(window.style.left || 0);
+                    startTop = parseInt(window.style.top || 0);
+                    window.style.zIndex = 1000;
+                    header.classList.add('dragging');
+                    
+                    // 设置为活动窗口
+                    const appName = window.id.replace('-window', '');
+                    setActiveWindow(appName);
+                });
+
+                document.addEventListener('mousemove', function(e) {
+                    if (!isDragging) return;
+                    const deltaX = e.clientX - startX;
+                    const deltaY = e.clientY - startY;
+                    window.style.left = (startLeft + deltaX) + 'px';
+                    window.style.top = (startTop + deltaY) + 'px';
+                });
+
+                document.addEventListener('mouseup', function() {
+                    if (isDragging) {
+                        isDragging = false;
+                        header.classList.remove('dragging');
+                    }
+                });
+
+                // 点击窗口时设置为活动窗口
+                window.addEventListener('mousedown', function() {
+                    const appName = window.id.replace('-window', '');
+                    setActiveWindow(appName);
+                });
+            });
+        }
+
+        // 终端输入处理
+        function handleTerminalInput(e) {
+            const input = e.target;
+            const value = input.value.trim();
+            
+            if (e.key === 'Enter' && value) {
+                // 添加到命令历史
+                commandHistory.push(value);
+                historyIndex = commandHistory.length;
+                
+                // 显示命令
+                const prompt = document.querySelector('.terminal-prompt').textContent;
+                const commandLine = document.createElement('div');
+                commandLine.className = 'terminal-line';
+                commandLine.textContent = `${prompt} ${value}`;
+                document.getElementById('terminal-content').insertBefore(commandLine, document.querySelector('.terminal-input'));
+                
+                // 处理命令
+                processCommand(value);
+                
+                // 清空输入
+                input.value = '';
+                
+                // 滚动到底部
+                const content = document.getElementById('terminal-content');
+                content.scrollTop = content.scrollHeight;
+            } else if (e.key === 'ArrowUp') {
+                // 历史命令向上
+                if (historyIndex > 0) {
+                    historyIndex--;
+                    input.value = commandHistory[historyIndex];
+                }
+                e.preventDefault();
+            } else if (e.key === 'ArrowDown') {
+                // 历史命令向下
+                if (historyIndex < commandHistory.length - 1) {
+                    historyIndex++;
+                    input.value = commandHistory[historyIndex];
+                } else {
+                    historyIndex = commandHistory.length;
+                    input.value = '';
+                }
+                e.preventDefault();
+            }
+        }
+
+        // 处理终端命令
+        function processCommand(command) {
+            const parts = command.split(' ');
+            const cmd = parts[0].toLowerCase();
+            const args = parts.slice(1);
+            
+            const output = document.createElement('div');
+            output.className = 'terminal-line';
+            output.style.color = '#e0e0e0';
+            
+            switch(cmd) {
+                case 'help':
+                    output.innerHTML = `可用命令：
+- help: 显示此帮助信息
+- ls: 列出当前目录内容
+- cd <目录>: 切换目录
+- mkdir <名称>: 创建目录
+- touch <名称>: 创建文件
+- cat <文件>: 显示文件内容
+- echo <文本> > <文件>: 写入文件
+- clear: 清屏
+- pwd: 显示当前路径
+- open <应用>: 打开应用 (finder, terminal, vscode, textedit, printer, settings)
+- wallpaper: 更换壁纸
+- date: 显示当前日期和时间
+- printer: 打开打印助手
+- fullscreen: 浏览器全屏切换`;
+                    break;
+                    
+                case 'ls':
+                    const files = currentFiles.map(f => 
+                        f.type === 'folder' ? `📁 ${f.name}/` : `📄 ${f.name}`
+                    ).join('  ');
+                    output.textContent = files || '空目录';
+                    break;
+                    
+                case 'cd':
+                    if (args.length === 0) {
+                        output.textContent = '请指定目录名称';
+                    } else if (args[0] === '..') {
+                        if (currentPath === 'desktop') {
+                            output.textContent = '已在根目录';
+                        } else {
+                            navigateTo('desktop');
+                            output.textContent = '已返回桌面';
+                        }
+                    } else if (args[0] === 'desktop' || args[0] === 'documents' || args[0] === 'downloads' || args[0] === 'pictures') {
+                        navigateTo(args[0]);
+                        output.textContent = `已切换到 ${args[0]}`;
+                    } else {
+                        const found = currentFiles.find(f => f.name === args[0] && f.type === 'folder');
+                        if (found) {
+                            output.textContent = '暂不支持进入子目录';
+                        } else {
+                            output.textContent = `目录不存在: ${args[0]}`;
+                        }
+                    }
+                    break;
+                    
+                case 'mkdir':
+                    if (args.length === 0) {
+                        output.textContent = '请指定目录名称';
+                    } else {
+                        const name = args[0];
+                        if (currentFiles.some(f => f.name === name)) {
+                            output.textContent = `文件或目录已存在: ${name}`;
+                        } else {
+                            currentFiles.push({ name, type: 'folder', children: [] });
+                            output.textContent = `创建目录成功: ${name}`;
+                            updateFinderFileList();
+                            updateVSCodeFileList();
+                        }
+                    }
+                    break;
+                    
+                case 'touch':
+                    if (args.length === 0) {
+                        output.textContent = '请指定文件名称';
+                    } else {
+                        const name = args[0];
+                        if (currentFiles.some(f => f.name === name)) {
+                            output.textContent = `文件或目录已存在: ${name}`;
+                        } else {
+                            currentFiles.push({ name, type: 'file', content: '' });
+                            output.textContent = `创建文件成功: ${name}`;
+                            updateFinderFileList();
+                            updateVSCodeFileList();
+                        }
+                    }
+                    break;
+                    
+                case 'cat':
+                    if (args.length === 0) {
+                        output.textContent = '请指定文件名称';
+                    } else {
+                        const file = currentFiles.find(f => f.name === args[0] && f.type === 'file');
+                        if (file) {
+                            output.textContent = file.content || '文件为空';
+                        } else {
+                            output.textContent = `文件不存在: ${args[0]}`;
+                        }
+                    }
+                    break;
+                    
+                case 'echo':
+                    if (args.length < 3 || args[1] !== '>') {
+                        output.textContent = '用法: echo <文本> > <文件>';
+                    } else {
+                        const text = args.slice(0, args.indexOf('>')).join(' ');
+                        const filename = args[args.indexOf('>') + 1];
+                        const file = currentFiles.find(f => f.name === filename && f.type === 'file');
+                        if (file) {
+                            file.content = text;
+                            output.textContent = `已写入到 ${filename}`;
+                        } else {
+                            output.textContent = `文件不存在: ${filename}`;
+                        }
+                    }
+                    break;
+                    
+                case 'clear':
+                    document.getElementById('terminal-content').innerHTML = `
+                        <div class="terminal-line">macOS 模拟终端 v1.0</div>
+                        <div class="terminal-line">输入 "help" 查看可用命令</div>
+                        <div class="terminal-line">----------------------------------------</div>
+                        <div class="terminal-input">
+                            <span class="terminal-prompt">MacBook-Pro:~ user$</span>
+                            <input type="text" class="terminal-input-field" id="terminal-input" autofocus autocomplete="off">
+                        </div>
+                    `;
+                    document.getElementById('terminal-input').addEventListener('keydown', handleTerminalInput);
+                    return;
+                    
+                case 'pwd':
+                    output.textContent = `/用户/${currentPath}`;
+                    break;
+                    
+                case 'open':
+                    if (args.length === 0) {
+                        output.textContent = '请指定应用名称';
+                    } else {
+                        const app = args[0].toLowerCase();
+                        if (['finder', 'terminal', 'vscode', 'textedit', 'settings', 'printer'].includes(app)) {
+                            openApp(app);
+                            output.textContent = `正在打开 ${app}...`;
+                        } else {
+                            output.textContent = `应用不存在: ${app}`;
+                        }
+                    }
+                    break;
+                    
+                case 'wallpaper':
+                    showWallpaperSelector();
+                    output.textContent = '正在打开壁纸选择器...';
+                    break;
+                    
+                case 'date':
+                    output.textContent = new Date().toString();
+                    break;
+                    
+                case 'printer':
+                    openApp('printer');
+                    output.textContent = '正在打开打印助手...';
+                    break;
+                    
+                case 'fullscreen':
+                    toggleBrowserFullscreen();
+                    output.textContent = '正在切换浏览器全屏...';
+                    break;
+                    
+                default:
+                    output.textContent = `命令未找到: ${cmd}`;
+            }
+            
+            const content = document.getElementById('terminal-content');
+            const inputContainer = document.querySelector('.terminal-input');
+            content.insertBefore(output, inputContainer);
+            
+            // 滚动到底部
+            content.scrollTop = content.scrollHeight;
+        }
+
+        // 导航到指定目录
+        function navigateTo(path) {
+            currentPath = path;
+            currentFiles = fileSystem[path] || [];
+            updateFinderFileList();
+            updateVSCodeFileList();
+            
+            // 更新路径显示
+            const pathElement = document.getElementById('finder-path');
+            if (pathElement) {
+                pathElement.textContent = `路径: /用户/${path}`;
+            }
+
+            // 如果打印助手在文件模式，更新文件列表
+            if (printerState.mode === 'file') {
+                updatePrinterFileList();
+            }
+        }
+
+        // 更新Finder文件列表
+        function updateFinderFileList() {
+            const fileList = document.getElementById('finder-file-list');
+            if (!fileList) return;
+            
+            fileList.innerHTML = '';
+            
+            if (currentFiles.length === 0) {
+                fileList.innerHTML = '<div style="color: #888; text-align: center; margin-top: 20px;">空文件夹</div>';
+                return;
+            }
+            
+            currentFiles.forEach(file => {
+                const item = document.createElement('div');
+                item.className = 'finder-item';
+                
+                const icon = file.type === 'folder' ? '📁' : '📄';
+                
+                item.innerHTML = `
+                    <span>${icon}</span>
+                    <span>${file.name}</span>
+                `;
+                
+                item.addEventListener('click', () => {
+                    if (file.type === 'file') {
+                        // 在VS Code中打开文件
+                        openApp('vscode');
+                        openInVSCode(file);
+                    }
+                });
+                
+                fileList.appendChild(item);
+            });
+        }
+
+        // 更新VS Code文件列表
+        function updateVSCodeFileList() {
+            const fileList = document.getElementById('vscode-file-list');
+            if (!fileList) return;
+            
+            fileList.innerHTML = '';
+            
+            currentFiles.forEach(file => {
+                if (file.type === 'file') {
+                    const item = document.createElement('div');
+                    item.className = 'finder-item';
+                    item.style.padding = '4px 8px';
+                    item.style.margin = '1px 0';
+                    item.style.borderRadius = '3px';
+                    item.style.cursor = 'pointer';
+                    item.style.fontSize = '12px';
+                    item.textContent = `📄 ${file.name}`;
+                    
+                    item.addEventListener('click', () => {
+                        openInVSCode(file);
+                    });
+                    
+                    fileList.appendChild(item);
+                }
+            });
+        }
+
+        // 在VS Code中打开文件
+        function openInVSCode(file) {
+            const editor = document.getElementById('vscode-editor');
+            const tab = document.getElementById('vscode-active-tab');
+            
+            if (editor && tab) {
+                editor.value = file.content || '';
+                tab.textContent = file.name;
+                vscodeCurrentFile = file;
+            }
+        }
+
+        // 创建新文件（Finder）
+        function createNewFile() {
+            const name = prompt('请输入新文件名称:', '新文件.txt');
+            if (name && !currentFiles.some(f => f.name === name)) {
+                currentFiles.push({ name, type: 'file', content: '' });
+                updateFinderFileList();
+                updateVSCodeFileList();
+                addLog(`创建文件: ${name}`, 'success');
+            } else if (name) {
+                alert('文件已存在');
+            }
+            hideAllDropdowns();
+        }
+
+        // 创建新文件夹（Finder）
+        function createNewFolder() {
+            const name = prompt('请输入新文件夹名称:', '新文件夹');
+            if (name && !currentFiles.some(f => f.name === name)) {
+                currentFiles.push({ name, type: 'folder', children: [] });
+                updateFinderFileList();
+                updateVSCodeFileList();
+                addLog(`创建文件夹: ${name}`, 'success');
+            } else if (name) {
+                alert('文件夹已存在');
+            }
+            hideAllDropdowns();
+        }
+
+        // 返回上级目录
+        function goBack() {
+            if (currentPath !== 'desktop') {
+                navigateTo('desktop');
+            }
+        }
+
+        // 保存VS Code文件
+        function saveVSCodeFile() {
+            if (!vscodeCurrentFile) {
+                const name = prompt('请输入文件名称:', '未命名.txt');
+                if (!name) return;
+                
+                // 检查文件名是否已存在
+                if (currentFiles.some(f => f.name === name)) {
+                    if (!confirm(`文件 "${name}" 已存在，要覆盖吗？`)) return;
+                    // 覆盖现有文件
+                    const existingFile = currentFiles.find(f => f.name === name);
+                    existingFile.content = document.getElementById('vscode-editor').value;
+                } else {
+                    // 创建新文件
+                    vscodeCurrentFile = { name, type: 'file', content: document.getElementById('vscode-editor').value };
+                    currentFiles.push(vscodeCurrentFile);
+                    updateFinderFileList();
+                    updateVSCodeFileList();
+                }
+            } else {
+                // 保存到现有文件
+                vscodeCurrentFile.content = document.getElementById('vscode-editor').value;
+            }
+            
+            alert(`文件 ${vscodeCurrentFile ? vscodeCurrentFile.name : '未命名'} 已保存`);
+        }
+
+        // 创建VS Code新文件
+        function createVSCodeFile() {
+            const name = prompt('请输入新文件名称:', '新文件.txt');
+            if (name && !currentFiles.some(f => f.name === name)) {
+                const newFile = { name, type: 'file', content: '' };
+                currentFiles.push(newFile);
+                updateFinderFileList();
+                updateVSCodeFileList();
+                openInVSCode(newFile);
+            } else if (name) {
+                alert('文件已存在');
+            }
+        }
+
+        // 更新文本编辑器状态显示
+        function updateTextEditStatus(text) {
+            const status = document.getElementById('textedit-status');
+            if (status) {
+                status.textContent = text;
+                if (text === '已保存') {
+                    status.classList.add('saved');
+                    setTimeout(() => {
+                        status.textContent = '';
+                        status.classList.remove('saved');
+                    }, 2000);
+                }
+            }
+        }
+
+        // 显示保存对话框
+        function showSaveDialog() {
+            const overlay = document.getElementById('overlay');
+            const dialog = document.getElementById('save-dialog');
+            const input = document.getElementById('new-filename');
+            
+            overlay.classList.add('show');
+            dialog.classList.add('show');
+            input.value = '';
+            input.focus();
+            
+            textEditState.saveCallback = null;
+        }
+
+        // 取消保存
+        function cancelSave() {
+            const overlay = document.getElementById('overlay');
+            const dialog = document.getElementById('save-dialog');
+            
+            overlay.classList.remove('show');
+            dialog.classList.remove('show');
+        }
+
+        // 确认保存（新文件）
+        function confirmSave() {
+            const filename = document.getElementById('new-filename').value.trim();
+            if (!filename) {
+                alert('请输入文件名');
+                return;
+            }
+            
+            // 检查文件名是否已存在
+            const existingFile = currentFiles.find(f => f.name === filename);
+            if (existingFile) {
+                // 显示覆盖确认对话框
+                cancelSave();
+                showConfirmDialog(filename);
+            } else {
+                // 保存为新文件
+                saveAsNewFile(filename);
+                cancelSave();
+            }
+        }
+
+        // 显示覆盖确认对话框
+        function showConfirmDialog(filename) {
+            const overlay = document.getElementById('overlay');
+            const dialog = document.getElementById('confirm-dialog');
+            const message = document.getElementById('confirm-message');
+            
+            message.textContent = `文件 "${filename}" 已存在，是否覆盖？`;
+            confirmState.fileName = filename;
+            
+            overlay.classList.add('show');
+            dialog.classList.add('show');
+        }
+
+        // 取消覆盖
+        function cancelOverwrite() {
+            const overlay = document.getElementById('overlay');
+            const dialog = document.getElementById('confirm-dialog');
+            
+            overlay.classList.remove('show');
+            dialog.classList.remove('show');
+        }
+
+        // 确认覆盖
+        function confirmOverwrite() {
+            const filename = confirmState.fileName;
+            // 覆盖现有文件
+            const existingFile = currentFiles.find(f => f.name === filename);
+            if (existingFile) {
+                existingFile.content = document.getElementById('textedit-editor').value;
+                textEditState.currentFile = existingFile;
+            }
+            
+            textEditState.isDirty = false;
+            updateTextEditStatus('已保存');
+            addLog(`文本编辑器: 文件 "${filename}" 已覆盖保存`, 'success');
+            
+            cancelOverwrite();
+        }
+
+        // 保存为新文件
+        function saveAsNewFile(filename) {
+            const content = document.getElementById('textedit-editor').value;
+            const newFile = { name: filename, type: 'file', content };
+            currentFiles.push(newFile);
+            textEditState.currentFile = newFile;
+            textEditState.isDirty = false;
+            updateTextEditStatus('已保存');
+            updateFinderFileList();
+            updateVSCodeFileList();
+            addLog(`文本编辑器: 新文件 "${filename}" 已保存`, 'success');
+        }
+
+        // 保存文本编辑器内容（覆盖现有或新建）
+        function saveTextEdit() {
+            if (textEditState.currentFile) {
+                // 覆盖现有文件
+                const content = document.getElementById('textedit-editor').value;
+                textEditState.currentFile.content = content;
+                textEditState.isDirty = false;
+                updateTextEditStatus('已保存');
+                addLog(`文本编辑器: 文件 "${textEditState.currentFile.name}" 已保存`, 'success');
+            } else {
+                // 没有关联文件，显示保存对话框
+                showSaveDialog();
+            }
+        }
+
+        // 壁纸选择器
+        function showWallpaperSelector() {
+            document.getElementById('wallpaper-selector').style.display = 'block';
+            hideAllDropdowns();
+        }
+
+        function hideWallpaperSelector() {
+            document.getElementById('wallpaper-selector').style.display = 'none';
+        }
+
+        function changeWallpaper(url) {
+            document.getElementById('desktop').style.backgroundImage = `url('${url}')`;
+            hideWallpaperSelector();
+            addLog('壁纸已更换', 'success');
+        }
+
+        // 右键菜单
+        function showContextMenu(e) {
+            e.preventDefault();
+            const menu = document.getElementById('context-menu');
+            menu.style.display = 'block';
+            menu.style.left = e.pageX + 'px';
+            menu.style.top = e.pageY + 'px';
+        }
+
+        function hideContextMenu() {
+            document.getElementById('context-menu').style.display = 'none';
+        }
+
+        function contextAction(action) {
+            hideContextMenu();
+            alert(`右键菜单操作: ${action}`);
+        }
+
+        // 壁纸按钮事件
+        document.getElementById('wallpaper-btn').addEventListener('click', showWallpaperSelector);
+
+        // 打印助手相关功能
+        // 切换模式
+        function switchMode(mode) {
+            printerState.mode = mode;
+            
+            // 更新按钮状态
+            document.querySelectorAll('.mode-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            // 更新内容显示
+            document.querySelectorAll('.mode-content').forEach(content => content.classList.remove('active'));
+            document.getElementById(`${mode}-mode`).classList.add('active');
+            
+            // 显示/隐藏文件名输入框（仅文本模式）
+            const filenameInput = document.getElementById('filename-input');
+            if (mode === 'text') {
+                filenameInput.classList.add('active');
+            } else {
+                filenameInput.classList.remove('active');
+                // 清空文件名
+                document.getElementById('custom-filename').value = '';
+                printerState.customFilename = '';
+            }
+            
+            addLog(`切换到${mode === 'file' ? '文件' : '文本'}模式`, 'info');
+        }
+
+        // 更新打印助手文件列表
+        function updatePrinterFileList() {
+            const container = document.getElementById('file-list-container');
+            if (!container) return;
+            
+            container.innerHTML = '';
+            
+            if (currentFiles.length === 0) {
+                container.innerHTML = '<div style="padding: 10px; color: #888;">当前目录没有文件</div>';
+                return;
+            }
+            
+            const fileFiles = currentFiles.filter(f => f.type === 'file');
+            if (fileFiles.length === 0) {
+                container.innerHTML = '<div style="padding: 10px; color: #888;">当前目录没有文件</div>';
+                return;
+            }
+            
+            fileFiles.forEach((file, index) => {
+                const item = document.createElement('div');
+                item.className = 'file-list-item';
+                item.innerHTML = `
+                    <input type="checkbox" id="file-${index}" ${printerState.selectedFiles.some(f => f.name === file.name) ? 'checked' : ''}>
+                    <label for="file-${index}" style="flex: 1; cursor: pointer;">📄 ${file.name}</label>
+                `;
+                
+                // 点击整行切换复选框
+                item.addEventListener('click', function(e) {
+                    if (e.target.type !== 'checkbox') {
+                        const checkbox = this.querySelector('input[type="checkbox"]');
+                        checkbox.checked = !checkbox.checked;
+                    }
+                    updateSelectedFilesFromCheckboxes();
+                });
+                
+                container.appendChild(item);
+            });
+        }
+
+        // 从复选框更新选中文件
+        function updateSelectedFilesFromCheckboxes() {
+            const checkboxes = document.querySelectorAll('#file-list-container input[type="checkbox"]');
+            printerState.selectedFiles = [];
+            
+            checkboxes.forEach((checkbox, index) => {
+                if (checkbox.checked) {
+                    const file = currentFiles.filter(f => f.type === 'file')[index];
+                    if (file) printerState.selectedFiles.push(file);
+                }
+            });
+            
+            updateSelectedFilesTags();
+            addLog(`已选择 ${printerState.selectedFiles.length} 个文件`, 'info');
+        }
+
+        // 更新选中文件标签
+        function updateSelectedFilesTags() {
+            const container = document.getElementById('selected-files-tags');
+            if (!container) return;
+            
+            container.innerHTML = '';
+            
+            printerState.selectedFiles.forEach((file, index) => {
+                const tag = document.createElement('div');
+                tag.className = 'selected-tag';
+                tag.innerHTML = `
+                    ${file.name}
+                    <span class="remove" onclick="removeSelectedFile(${index})">×</span>
+                `;
+                container.appendChild(tag);
+            });
+            
+            if (printerState.selectedFiles.length === 0) {
+                container.innerHTML = '<div style="color: #888; font-size: 11px;">暂无选中文件</div>';
+            }
+        }
+
+        // 移除选中的文件
+        function removeSelectedFile(index) {
+            const file = printerState.selectedFiles[index];
+            printerState.selectedFiles.splice(index, 1);
+            
+            // 更新复选框状态
+            const checkboxes = document.querySelectorAll('#file-list-container input[type="checkbox"]');
+            checkboxes.forEach((checkbox, i) => {
+                const currentFile = currentFiles.filter(f => f.type === 'file')[i];
+                if (currentFile && currentFile.name === file.name) {
+                    checkbox.checked = false;
+                }
+            });
+            
+            updateSelectedFilesTags();
+            addLog(`移除文件: ${file.name}`, 'info');
+        }
+
+        // 更新循环状态
+        function updateLoopStatus(text) {
+            const status = document.getElementById('loop-status');
+            if (status) {
+                status.textContent = text;
+            }
+        }
+
+        // 更新应用状态
+        function updateAppStatus(text) {
+            const indicator = document.getElementById('app-status-indicator');
+            const statusText = document.getElementById('app-status-text');
+            if (indicator && statusText) {
+                if (text) {
+                    statusText.textContent = text;
+                    indicator.style.display = 'block';
+                } else {
+                    indicator.style.display = 'none';
+                }
+            }
+        }
+
+        // 开始处理
+        function startProcessing() {
+            if (printerState.isProcessing) {
+                addLog('正在处理中，请等待完成', 'error');
+                return;
+            }
+            
+            // 检查输入
+            if (printerState.mode === 'file' && printerState.selectedFiles.length === 0) {
+                addLog('请先选择文件', 'error');
+                return;
+            }
+            
+            if (printerState.mode === 'text') {
+                const textContent = document.getElementById('text-input-area').value.trim();
+                if (!textContent) {
+                    addLog('请输入文本内容', 'error');
+                    return;
+                }
+                printerState.textContent = textContent;
+                
+                // 获取自定义文件名（不立即保存）
+                const customFilename = document.getElementById('custom-filename').value.trim();
+                if (customFilename) {
+                    // 自动添加扩展名
+                    if (!customFilename.includes('.')) {
+                        printerState.customFilename = customFilename + '.txt';
+                    } else {
+                        printerState.customFilename = customFilename;
+                    }
+                    addLog(`文件名已设置: ${printerState.customFilename}（处理完成后保存）`, 'info');
+                } else {
+                    printerState.customFilename = '';
+                }
+            }
+            
+            if (!printerState.targetApp) {
+                addLog('请先选择目标应用', 'error');
+                return;
+            }
+            
+            // 获取设置
+            printerState.loopCount = parseInt(document.getElementById('loop-count').value) || 1;
+            printerState.loopDelay = parseInt(document.getElementById('loop-delay').value) || 1000;
+            printerState.loopEnabled = document.getElementById('loop-enabled').checked;
+            printerState.charDelay = parseInt(document.getElementById('char-delay').value) || 50;
+            printerState.lineDelay = parseInt(document.getElementById('line-delay').value) || 500;
+            printerState.clearWorkspace = document.getElementById('clear-workspace').checked;
+            
+            printerState.isProcessing = true;
+            printerState.currentLoop = 0;
+            printerState.appOpened = false;
+            
+            addLog(`开始处理 (${printerState.mode === 'file' ? '文件' : '文本'}模式)...`, 'success');
+            
+            // 显示打字进度
+            showTypingIndicator();
+            
+            // 显示循环状态
+            if (printerState.loopEnabled) {
+                updateLoopStatus(`循环第 1/${printerState.loopCount} 次`);
+            }
+            
+            processNextBatch();
+        }
+
+        // 显示打字进度
+        function showTypingIndicator() {
+            const indicator = document.getElementById('typing-indicator');
+            indicator.classList.add('active');
+            updateTypingStatus('准备中...', 0);
+        }
+
+        // 更新打字状态
+        function updateTypingStatus(text, progress) {
+            document.getElementById('typing-status').textContent = text;
+            document.getElementById('typing-progress').style.width = progress + '%';
+        }
+
+        // 处理下一批
+        function processNextBatch() {
+            if (!printerState.isProcessing) return;
+            
+            const batchIndex = printerState.currentLoop + 1;
+            
+            if (printerState.loopEnabled) {
+                updateLoopStatus(`循环第 ${batchIndex}/${printerState.loopCount} 次`);
+                addLog(`第 ${batchIndex}/${printerState.loopCount} 批处理开始`, 'info');
+            } else {
+                addLog(`处理开始`, 'info');
+            }
+            
+            // 第一次处理时需要打开应用
+            if (!printerState.appOpened) {
+                // 打开目标应用并清空
+                openAndClearWorkspace().then(() => {
+                    printerState.appOpened = true;
+                    updateAppStatus(`应用已打开: ${printerState.targetApp}，后续循环将在该应用中继续`);
+                    processContent();
+                });
+            } else {
+                // 应用已打开，直接处理内容
+                processContent();
+            }
+        }
+
+        // 处理内容（文件或文本）
+        function processContent() {
+            if (!printerState.isProcessing) return;
+            
+            if (printerState.mode === 'file') {
+                // 文件模式：处理所有选中文件
+                processNextFile(0);
+            } else {
+                // 文本模式：处理文本内容
+                processNextTextContent();
+            }
+        }
+
+        // 处理下一个文件
+        function processNextFile(fileIndex) {
+            if (!printerState.isProcessing) return;
+            
+            if (fileIndex >= printerState.selectedFiles.length) {
+                // 所有文件处理完成
+                if (printerState.loopEnabled) {
+                    addLog(`文件批次 ${printerState.currentLoop + 1} 完成`, 'success');
+                }
+                checkNextBatch();
+                return;
+            }
+            
+            const file = printerState.selectedFiles[fileIndex];
+            updateTypingStatus(`正在处理: ${file.name}`, (fileIndex / printerState.selectedFiles.length) * 100);
+            
+            // 开始逐字输入
+            typeContent(file.content, () => {
+                // 当前文件处理完成
+                setTimeout(() => {
+                    processNextFile(fileIndex + 1);
+                }, printerState.lineDelay);
+            });
+        }
+
+        // 处理下一个文本内容
+        function processNextTextContent() {
+            if (!printerState.isProcessing) return;
+            
+            updateTypingStatus('正在处理文本内容', 50);
+            
+            // 开始逐字输入
+            typeContent(printerState.textContent, () => {
+                addLog('文本内容处理完成', 'success');
+                checkNextBatch();
+            });
+        }
+
+        // 检查是否需要下一批
+        function checkNextBatch() {
+            printerState.currentLoop++;
+            if (printerState.loopEnabled && printerState.currentLoop < printerState.loopCount) {
+                // 延迟后开始下一轮循环
+                setTimeout(() => {
+                    if (printerState.isProcessing) {
+                        // 应用已打开，直接处理内容
+                        processContent();
+                    }
+                }, printerState.loopDelay);
+            } else {
+                // 所有处理完成
+                finishProcessing();
+            }
+        }
+
+        // 完成处理
+        function finishProcessing() {
+            printerState.isProcessing = false;
+            updateTypingStatus('完成', 100);
+            if (printerState.loopEnabled) {
+                updateLoopStatus(`所有循环完成 (${printerState.loopCount} 次)`);
+            }
+            addLog('所有处理已完成', 'success');
+            
+            // 如果是文本模式且有自定义文件名，保存文件
+            if (printerState.mode === 'text' && printerState.customFilename) {
+                saveProcessedFile();
+            }
+            
+            // 2秒后隐藏进度指示器
+            setTimeout(() => {
+                document.getElementById('typing-indicator').classList.remove('active');
+                if (printerState.loopEnabled) {
+                    updateLoopStatus('循环已结束');
+                }
+                updateAppStatus(''); // 清除应用状态
+            }, 2000);
+        }
+
+        // 保存处理完成的文件（文本模式）
+        function saveProcessedFile() {
+            if (!printerState.customFilename) return;
+            
+            // 检查文件是否已存在
+            const existingFile = currentFiles.find(f => f.name === printerState.customFilename);
+            if (existingFile) {
+                // 覆盖现有文件
+                existingFile.content = printerState.textContent;
+                addLog(`已覆盖保存文件: ${printerState.customFilename}`, 'success');
+            } else {
+                // 创建新文件
+                currentFiles.push({ 
+                    name: printerState.customFilename, 
+                    type: 'file', 
+                    content: printerState.textContent 
+                });
+                addLog(`已保存新文件: ${printerState.customFilename}`, 'success');
+            }
+            
+            // 更新文件列表
+            updateFinderFileList();
+            updateVSCodeFileList();
+        }
+
+        // 打开并清空工作区（仅首次）
+        function openAndClearWorkspace() {
+            return new Promise((resolve) => {
+                if (!printerState.clearWorkspace) {
+                    resolve();
+                    return;
+                }
+                
+                switch(printerState.targetApp) {
+                    case 'terminal':
+                        openApp('terminal');
+                        setTimeout(() => {
+                            // 清空终端
+                            document.getElementById('terminal-content').innerHTML = `
+                                <div class="terminal-line">macOS 模拟终端 v1.0</div>
+                                <div class="terminal-line">工作区已清空，准备接收输入...</div>
+                                <div class="terminal-line">----------------------------------------</div>
+                                <div class="terminal-input">
+                                    <span class="terminal-prompt">MacBook-Pro:~ user$</span>
+                                    <input type="text" class="terminal-input-field" id="terminal-input" autofocus autocomplete="off">
+                                </div>
+                            `;
+                            document.getElementById('terminal-input').addEventListener('keydown', handleTerminalInput);
+                            addLog('终端工作区已清空', 'info');
+                            resolve();
+                        }, 100);
+                        break;
+                        
+                    case 'vscode':
+                        openApp('vscode');
+                        setTimeout(() => {
+                            // 清空编辑器并设置标签页名称
+                            document.getElementById('vscode-editor').value = '';
+                            // 使用自定义文件名作为标签页名称，如果没有则使用默认名称
+                            const tabName = printerState.customFilename || '打印助手输出';
+                            document.getElementById('vscode-active-tab').textContent = tabName;
+                            // 聚焦并显示光标
+                            const editor = document.getElementById('vscode-editor');
+                            editor.focus();
+                            editor.classList.add('cursor-visible');
+                            addLog('VS Code工作区已清空', 'info');
+                            resolve();
+                        }, 100);
+                        break;
+                        
+                    case 'textedit':
+                        openApp('textedit');
+                        setTimeout(() => {
+                            // 清空文本编辑器
+                            document.getElementById('textedit-editor').value = '';
+                            textEditState.currentFile = null;
+                            textEditState.isDirty = false;
+                            updateTextEditStatus('');
+                            // 聚焦并显示光标
+                            const editor = document.getElementById('textedit-editor');
+                            editor.focus();
+                            editor.classList.add('cursor-visible');
+                            addLog('文本编辑器工作区已清空', 'info');
+                            resolve();
+                        }, 100);
+                        break;
+                        
+                    case 'finder':
+                        openApp('finder');
+                        setTimeout(() => {
+                            // 在Finder中显示预览
+                            addLog('Finder模式将显示内容预览', 'info');
+                            resolve();
+                        }, 100);
+                        break;
+                }
+            });
+        }
+
+        // 逐字输入内容
+        function typeContent(content, callback) {
+            if (!printerState.isProcessing) return;
+            
+            const chars = content.split('');
+            let currentIndex = 0;
+            
+            const typeNextChar = () => {
+                if (!printerState.isProcessing || currentIndex >= chars.length) {
+                    if (callback) callback();
+                    return;
+                }
+                
+                const char = chars[currentIndex];
+                
+                switch(printerState.targetApp) {
+                    case 'terminal':
+                        // 终端逐字输出
+                        const terminalContent = document.getElementById('terminal-content');
+                        const lines = terminalContent.querySelectorAll('.terminal-line');
+                        const lastLine = lines[lines.length - 1];
+                        
+                        if (!lastLine || !lastLine.classList.contains('typing-line')) {
+                            // 创建新行
+                            const newLine = document.createElement('div');
+                            newLine.className = 'terminal-line typing-line';
+                            terminalContent.insertBefore(newLine, document.querySelector('.terminal-input'));
+                        }
+                        
+                        const currentLine = terminalContent.querySelector('.typing-line');
+                        currentLine.textContent += char;
+                        
+                        // 添加光标
+                        const cursor = document.createElement('span');
+                        cursor.className = 'typing-cursor';
+                        currentLine.appendChild(cursor);
+                        
+                        // 滚动到底部
+                        terminalContent.scrollTop = terminalContent.scrollHeight;
+                        break;
+                        
+                    case 'vscode':
+                        // VS Code逐字追加
+                        const editor = document.getElementById('vscode-editor');
+                        const currentValue = editor.value;
+                        editor.value = currentValue + char;
+                        
+                        // 移动光标到末尾
+                        editor.selectionStart = editor.value.length;
+                        editor.selectionEnd = editor.value.length;
+                        editor.focus();
+                        
+                        // 滚动到底部
+                        editor.scrollTop = editor.scrollHeight;
+                        break;
+                        
+                    case 'textedit':
+                        // 文本编辑器逐字追加
+                        const textEditor = document.getElementById('textedit-editor');
+                        const currentTextValue = textEditor.value;
+                        textEditor.value = currentTextValue + char;
+                        
+                        // 移动光标到末尾
+                        textEditor.selectionStart = textEditor.value.length;
+                        textEditor.selectionEnd = textEditor.value.length;
+                        textEditor.focus();
+                        
+                        // 滚动到底部
+                        textEditor.scrollTop = textEditor.scrollHeight;
+                        textEditState.isDirty = true;
+                        updateTextEditStatus('输入中...');
+                        break;
+                        
+                    case 'finder':
+                        // Finder模式只显示进度
+                        if (currentIndex % 10 === 0) {
+                            addLog(`输入进度: ${currentIndex}/${chars.length} 字符`, 'info');
+                        }
+                        break;
+                }
+                
+                currentIndex++;
+                updateTypingStatus(`输入中: ${currentIndex}/${chars.length} 字符`, (currentIndex / chars.length) * 100);
+                
+                // 继续下一个字符
+                printerState.typingTimer = setTimeout(typeNextChar, printerState.charDelay);
+            };
+            
+            typeNextChar();
+        }
+
+        // 停止处理
+        function stopProcessing() {
+            if (!printerState.isProcessing) {
+                addLog('当前没有正在处理的任务', 'info');
+                return;
+            }
+            
+            printerState.isProcessing = false;
+            if (printerState.typingTimer) {
+                clearTimeout(printerState.typingTimer);
+            }
+            
+            updateTypingStatus('已停止', 0);
+            document.getElementById('typing-indicator').classList.remove('active');
+            updateLoopStatus('已停止');
+            updateAppStatus(''); // 清除应用状态
+            addLog('已停止处理', 'warning');
+        }
+
+        // 清空队列
+        function clearQueue() {
+            printerState.selectedFiles = [];
+            printerState.textContent = '';
+            printerState.targetApp = null;
+            printerState.isProcessing = false;
+            printerState.currentLoop = 0;
+            printerState.appOpened = false;
+            printerState.customFilename = '';
+            
+            // 重置UI
+            document.querySelectorAll('.app-option').forEach(opt => opt.classList.remove('selected'));
+            document.getElementById('text-input-area').value = '';
+            document.getElementById('custom-filename').value = '';
+            
+            // 清除复选框
+            const checkboxes = document.querySelectorAll('#file-list-container input[type="checkbox"]');
+            checkboxes.forEach(cb => cb.checked = false);
+            
+            updateSelectedFilesTags();
+            
+            // 隐藏打字指示器
+            document.getElementById('typing-indicator').classList.remove('active');
+            
+            // 重置循环状态
+            updateLoopStatus('准备循环...');
+            document.getElementById('loop-enabled').checked = false;
+            document.getElementById('loop-indicator').classList.remove('active');
+            
+            // 清除应用状态
+            updateAppStatus('');
+            
+            // 隐藏文件名输入框
+            const filenameInput = document.getElementById('filename-input');
+            filenameInput.classList.remove('active');
+            
+            addLog('队列已清空', 'info');
+        }
+
+        // 添加日志
+        function addLog(message, type = 'info') {
+            const log = document.getElementById('output-log');
+            if (!log) return;
+            
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${type}`;
+            entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            log.appendChild(entry);
+            log.scrollTop = log.scrollHeight;
+        }
+
+        // 更新打印助手UI
+        function updatePrinterUI() {
+            // 更新循环设置
+            document.getElementById('loop-count').value = printerState.loopCount;
+            document.getElementById('loop-delay').value = printerState.loopDelay;
+            document.getElementById('loop-enabled').checked = printerState.loopEnabled;
+            
+            // 更新打字设置
+            document.getElementById('char-delay').value = printerState.charDelay;
+            document.getElementById('line-delay').value = printerState.lineDelay;
+            document.getElementById('clear-workspace').checked = printerState.clearWorkspace;
+            
+            // 更新模式
+            document.querySelectorAll('.mode-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.mode-content').forEach(content => content.classList.remove('active'));
+            
+            if (printerState.mode === 'file') {
+                document.querySelector('.mode-btn:first-child').classList.add('active');
+                document.getElementById('file-mode').classList.add('active');
+            } else {
+                document.querySelector('.mode-btn:last-child').classList.add('active');
+                document.getElementById('text-mode').classList.add('active');
+            }
+            
+            // 更新应用选择
+            if (printerState.targetApp) {
+                document.querySelectorAll('.app-option').forEach(opt => {
+                    if (opt.dataset.app === printerState.targetApp) {
+                        opt.classList.add('selected');
+                    }
+                });
+            }
+
+            // 更新循环指示器
+            const indicator = document.getElementById('loop-indicator');
+            if (printerState.loopEnabled) {
+                indicator.classList.add('active');
+                updateLoopStatus('循环已启用');
+            } else {
+                indicator.classList.remove('active');
+                updateLoopStatus('循环已禁用');
+            }
+
+            // 清除应用状态
+            updateAppStatus('');
+            
+            // 更新文件名输入框显示
+            const filenameInput = document.getElementById('filename-input');
+            if (printerState.mode === 'text') {
+                filenameInput.classList.add('active');
+            } else {
+                filenameInput.classList.remove('active');
+            }
+        }
+    </script>
+</body>
+</html>

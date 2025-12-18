@@ -599,8 +599,8 @@ app.get("/apps/palid", async (req, res) => {
 });
 
 // 手势游戏
-app.get("/apps/gesture", async (req, res) => {
-  res.sendFile(path.join(__dirname, 'apps/gesture/index.html'));
+app.get("/apps/vmmac", async (req, res) => {
+  res.sendFile(path.join(__dirname, 'apps/vmmac/index.html'));
 });
 
 app.get("/404", async (req, res) => {
@@ -608,9 +608,22 @@ app.get("/404", async (req, res) => {
 });
 
 // ✅ 兜底路由
-app.use((req, res) => {
-  res.setHeader('Cache-Control', 'no-cache');
-  res.sendFile(path.join(__dirname, 'dist/index.html'));
+app.use((req, res, next) => {
+  try {
+    res.setHeader('Cache-Control', 'no-cache');
+    res.sendFile(path.join(__dirname, 'dist/index.html'));
+  } catch {
+    console.log("error", error)
+    // 🔥 这里重定向到指定网页
+    next()
+  }
+});
+
+// 全局错误处理
+app.use((err, req, res, next) => {
+  console.error('Global error:', err);
+
+  res.redirect('https://xujingyichang.top/404');
 });
 
 app.listen(PORT, () => {
