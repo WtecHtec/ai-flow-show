@@ -22,3 +22,5 @@ npm-debug.log*
 .DS_Store
 Thumbs.db
 *.zip
+*/**/.DS_Store
+**/.DS_Store

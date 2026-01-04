@@ -603,6 +603,11 @@ app.get("/apps/vmmac", async (req, res) => {
   res.sendFile(path.join(__dirname, 'apps/vmmac/index.html'));
 });
 
+// html 转换为微信公众号
+app.get("/apps/html2wx", async (req, res) => {
+  res.sendFile(path.join(__dirname, 'apps/html2wx/index.html'));
+});
+
 app.get("/404", async (req, res) => {
   res.sendFile(path.join(__dirname, '404/index.html'));
 });
