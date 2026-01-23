@@ -1,0 +1,882 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>拍马屁 - 新年好运游戏</title>
+    <!-- Canvas Confetti 库 -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 25%, #ff4757 50%, #ff3838 75%, #c23616 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            position: relative;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+        }
+
+        .game-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 80px;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* 移动端适配 */
+        @media (max-width: 768px) {
+            .game-container {
+                flex-direction: column;
+                gap: 40px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .game-container {
+                gap: 30px;
+                padding: 20px;
+            }
+        }
+
+        .side-text {
+            font-size: 48px;
+            font-weight: bold;
+            color: #FFD700;
+            text-shadow: 
+                0 0 10px rgba(255, 215, 0, 0.8),
+                0 0 20px rgba(255, 215, 0, 0.6),
+                3px 3px 5px rgba(0, 0, 0, 0.5);
+            animation: glow 2s ease-in-out infinite;
+            user-select: none;
+        }
+
+        /* 移动端文字调整 */
+        @media (max-width: 768px) {
+            .side-text {
+                font-size: 36px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .side-text {
+                font-size: 28px;
+            }
+        }
+
+        @keyframes glow {
+            0%, 100% { 
+                transform: scale(1);
+                filter: brightness(1);
+            }
+            50% { 
+                transform: scale(1.1);
+                filter: brightness(1.3);
+            }
+        }
+
+        .horse-container {
+            position: relative;
+            cursor: pointer;
+            transition: transform 0.1s;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        .horse-container:active {
+            transform: scale(0.95);
+        }
+
+        .horse {
+            width: 280px;
+            height: 280px;
+            position: relative;
+        }
+
+        /* 移动端马的尺寸调整 */
+        @media (max-width: 480px) {
+            .horse {
+                width: 220px;
+                height: 220px;
+                transform: scale(0.9);
+            }
+        }
+
+        /* 马屁股 (圆形身体) - 正对用户，两半屁股 */
+        .horse-butt {
+            position: absolute;
+            width: 220px;
+            height: 220px;
+            top: 40px;
+            left: 30px;
+            z-index: 3;
+        }
+
+        /* 左半边屁股 */
+        .horse-butt::before {
+            content: '';
+            position: absolute;
+            width: 110px;
+            height: 200px;
+            background: linear-gradient(to right, #d4a574 0%, #c9995e 50%, #b8864e 100%);
+            border-radius: 100% 20% 40% 100%;
+            left: 0;
+            top: 10px;
+            box-shadow: 
+                inset -10px 0 20px rgba(0, 0, 0, 0.2),
+                inset 0 10px 20px rgba(255, 255, 255, 0.1),
+                3px 3px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        /* 右半边屁股 */
+        .horse-butt::after {
+            content: '';
+            position: absolute;
+            width: 110px;
+            height: 200px;
+            background: linear-gradient(to left, #d4a574 0%, #c9995e 50%, #b8864e 100%);
+            border-radius: 20% 100% 100% 40%;
+            right: 0;
+            top: 10px;
+            box-shadow: 
+                inset 10px 0 20px rgba(0, 0, 0, 0.2),
+                inset 0 10px 20px rgba(255, 255, 255, 0.1),
+                -3px 3px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        /* 中间的分隔线 */
+        .butt-line {
+            position: absolute;
+            width: 3px;
+            height: 140px;
+            background: linear-gradient(to bottom, transparent 0%, #8b6f47 20%, #6d563a 50%, #8b6f47 80%, transparent 100%);
+            left: 50%;
+            top: 50px;
+            transform: translateX(-50%);
+            z-index: 4;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
+        }
+
+        /* 马的后背（连接头和屁股） */
+        .horse-back {
+            position: absolute;
+            width: 120px;
+            height: 80px;
+            background: linear-gradient(to right, #d4a574 0%, #c9995e 100%);
+            border-radius: 50% 50% 30% 30%;
+            top: 60px;
+            left: -40px;
+            z-index: 0;
+            transform: rotate(20deg);
+            box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        /* 马尾巴 - 在屁股上方 */
+        .horse-tail {
+            position: absolute;
+            width: 80px;
+            height: 140px;
+            background: linear-gradient(180deg, #8b6f47 0%, #6d563a 30%, #4a3f2e 100%);
+            border-radius: 50% 50% 30% 30%;
+            top: -20px;
+            left: 95px;
+            transform: rotate(0deg);
+            animation: tailWag 1.5s ease-in-out infinite;
+            z-index: 2;
+            box-shadow: 3px 3px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        /* 马尾巴的毛发效果 */
+        .horse-tail::before {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 60%;
+            background: linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.1) 50%, rgba(0, 0, 0, 0.2) 100%);
+            border-radius: 50% 50% 30% 30%;
+            bottom: 0;
+        }
+
+        @keyframes tailWag {
+            0%, 100% { transform: rotate(0deg) translateX(0); }
+            50% { transform: rotate(-15deg) translateX(-15px); }
+        }
+
+        /* 马头 - 在后方回头看 */
+        .horse-head {
+            position: absolute;
+            width: 90px;
+            height: 110px;
+            background: linear-gradient(135deg, #d4a574 0%, #c9995e 50%, #b8864e 100%);
+            border-radius: 40% 40% 35% 35%;
+            top: 80px;
+            left: -50px;
+            z-index: 1;
+            transform-origin: right center;
+            transform: rotate(45deg);
+            box-shadow: 3px 3px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        /* 马头的高光 */
+        .horse-head::before {
+            content: '';
+            position: absolute;
+            width: 40%;
+            height: 30%;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            top: 20%;
+            left: 20%;
+        }
+
+        .horse-head.shake {
+            animation: headShake 0.5s ease-in-out;
+        }
+
+        @keyframes headShake {
+            0%, 100% { transform: rotate(45deg); }
+            25% { transform: rotate(30deg); }
+            75% { transform: rotate(60deg); }
+        }
+
+        /* 眼睛 */
+        .eye {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            background: #333;
+            border-radius: 50%;
+            top: 30px;
+            transition: all 0.3s;
+        }
+
+        .eye.left {
+            left: 30px;
+        }
+
+        .eye.right {
+            left: 50px;
+        }
+
+        /* 眼睛高光 */
+        .eye::after {
+            content: '';
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            background: white;
+            border-radius: 50%;
+            top: 3px;
+            left: 3px;
+        }
+
+        /* 享受表情 - 眯眼 */
+        .eye.enjoying {
+            height: 3px;
+            border-radius: 50% 50% 0 0;
+            animation: eyeEnjoy 0.5s ease-in-out;
+        }
+
+        @keyframes eyeEnjoy {
+            0%, 100% { height: 3px; }
+            50% { height: 2px; }
+        }
+
+        /* 腮红效果 */
+        .blush {
+            position: absolute;
+            width: 20px;
+            height: 12px;
+            background: radial-gradient(circle, rgba(255, 150, 150, 0.6) 0%, transparent 70%);
+            border-radius: 50%;
+            top: 45px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .blush.left {
+            left: 15px;
+        }
+
+        .blush.right {
+            right: 15px;
+        }
+
+        .blush.show {
+            opacity: 1;
+        }
+
+        /* 嘴巴 */
+        .mouth {
+            position: absolute;
+            width: 25px;
+            height: 12px;
+            border: 2px solid #333;
+            border-top: none;
+            border-radius: 0 0 50% 50%;
+            bottom: 25px;
+            left: 32px;
+            transition: all 0.3s;
+        }
+
+        /* 享受表情 - 微笑 */
+        .mouth.enjoying {
+            width: 30px;
+            height: 15px;
+            border-radius: 0 0 60% 60%;
+            animation: mouthSmile 0.5s ease-in-out;
+            left: 30px;
+        }
+
+        @keyframes mouthSmile {
+            0%, 100% { height: 15px; }
+            50% { height: 18px; }
+        }
+
+        /* 耳朵 */
+        .ear {
+            position: absolute;
+            width: 20px;
+            height: 35px;
+            background: linear-gradient(to bottom, #c9995e 0%, #b8864e 100%);
+            border-radius: 50% 50% 0 0;
+            top: -5px;
+            box-shadow: inset 2px 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        .ear.left {
+            left: 20px;
+            transform: rotate(-20deg);
+        }
+
+        .ear.right {
+            left: 50px;
+            transform: rotate(20deg);
+        }
+
+        /* 马蹄 */
+        .hoof {
+            position: absolute;
+            width: 35px;
+            height: 60px;
+            background: linear-gradient(180deg, #c9995e 0%, #8b6f47 50%, #4a3f2e 100%);
+            border-radius: 5px 5px 15px 15px;
+            bottom: -20px;
+            z-index: 2;
+            box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.4);
+        }
+
+        .hoof.left {
+            left: 60px;
+        }
+
+        .hoof.right {
+            right: 60px;
+        }
+
+        .hoof::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 38px;
+            height: 18px;
+            background: #2c2c2c;
+            border-radius: 50%;
+            border: 2px solid #1a1a1a;
+            box-shadow: 
+                inset 0 2px 3px rgba(255, 255, 255, 0.2),
+                0 2px 5px rgba(0, 0, 0, 0.5);
+        }
+
+        /* 马蹄铁的细节 */
+        .hoof::before {
+            content: '';
+            position: absolute;
+            bottom: 2px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 30px;
+            height: 12px;
+            border: 2px solid #1a1a1a;
+            border-top: none;
+            border-radius: 0 0 50% 50%;
+            z-index: 1;
+        }
+
+        .hoof.kick {
+            animation: hoofKick 0.5s ease-in-out;
+        }
+
+        @keyframes hoofKick {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+
+        /* 祝福文案弹出效果 */
+        .blessing {
+            position: fixed;
+            font-size: 36px;
+            font-weight: bold;
+            pointer-events: none;
+            z-index: 1000;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+            animation: blessingFloat 2s ease-out forwards;
+        }
+
+        /* 移动端祝福文案调整 */
+        @media (max-width: 480px) {
+            .blessing {
+                font-size: 28px;
+            }
+        }
+
+        @keyframes blessingFloat {
+            0% {
+                transform: translate(-50%, -50%) scale(0.5);
+                opacity: 0;
+            }
+            20% {
+                transform: translate(-50%, -50%) scale(1.2);
+                opacity: 1;
+            }
+            100% {
+                transform: translate(-50%, -150px) scale(1) rotate(10deg);
+                opacity: 0;
+            }
+        }
+
+        /* 点击次数计数器 */
+        .counter {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            padding: 15px 25px;
+            border-radius: 20px;
+            color: white;
+            font-size: 20px;
+            font-weight: bold;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            text-align: center;
+        }
+
+        /* 移动端计数器调整 */
+        @media (max-width: 480px) {
+            .counter {
+                top: 15px;
+                right: 15px;
+                padding: 10px 15px;
+                font-size: 16px;
+            }
+        }
+
+        .counter-number {
+            font-size: 32px;
+            color: #FFD700;
+            display: block;
+            margin-top: 5px;
+            position: relative;
+            overflow: hidden;
+            height: 40px;
+            line-height: 40px;
+        }
+
+        /* 数字滚动容器 */
+        .counter-number-inner {
+            display: inline-block;
+            transition: transform 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+
+        /* 数字增加时的动画 */
+        @keyframes numberBounce {
+            0% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.5);
+                color: #FFF;
+            }
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        .counter-number.bounce {
+            animation: numberBounce 0.5s ease-out;
+        }
+
+        /* 移动端计数器数字调整 */
+        @media (max-width: 480px) {
+            .counter-number {
+                font-size: 24px;
+                height: 30px;
+                line-height: 30px;
+            }
+        }
+
+        /* 粒子背景 */
+        .particle {
+            position: fixed;
+            border-radius: 50%;
+            pointer-events: none;
+            animation: float 20s infinite;
+            opacity: 0.3;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0) translateX(0); }
+            25% { transform: translateY(-100px) translateX(50px); }
+            50% { transform: translateY(-50px) translateX(-50px); }
+            75% { transform: translateY(-150px) translateX(100px); }
+        }
+
+        /* 提示文字 */
+        .hint {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: white;
+            font-size: 18px;
+            opacity: 0.8;
+            animation: hintBounce 2s ease-in-out infinite;
+        }
+
+        /* 移动端提示文字调整 */
+        @media (max-width: 480px) {
+            .hint {
+                font-size: 14px;
+                bottom: 20px;
+            }
+        }
+
+        @keyframes hintBounce {
+            0%, 100% { transform: translateX(-50%) translateY(0); }
+            50% { transform: translateX(-50%) translateY(-10px); }
+        }
+    </style>
+</head>
+<body>
+    <!-- 背景粒子 -->
+    <div id="particles"></div>
+
+    <!-- 点击计数器 -->
+    <div class="counter">
+        <div>今日拍马屁</div>
+        <span class="counter-number" id="clickCount">0</span>
+    </div>
+
+    <!-- 游戏主体 -->
+    <div class="game-container">
+        <div class="side-text">拍拍马屁</div>
+        
+        <div class="horse-container" id="horseContainer">
+            <div class="horse">
+                <div class="horse-back"></div>
+                <div class="horse-tail"></div>
+                <div class="horse-butt">
+                    <div class="butt-line"></div>
+                </div>
+                <div class="horse-head" id="horseHead">
+                    <div class="ear left"></div>
+                    <div class="ear right"></div>
+                    <div class="eye left" id="eyeLeft"></div>
+                    <div class="eye right" id="eyeRight"></div>
+                    <div class="blush left" id="blushLeft"></div>
+                    <div class="blush right" id="blushRight"></div>
+                    <div class="mouth" id="mouth"></div>
+                </div>
+                <div class="hoof left" id="hoofLeft"></div>
+                <div class="hoof right" id="hoofRight"></div>
+            </div>
+        </div>
+        
+        <div class="side-text">大吉大利</div>
+    </div>
+
+    <!-- 提示文字 -->
+    <div class="hint">👆 点击马屁股，获得好运祝福！</div>
+
+    <script>
+        // 数字滚动动画函数
+        function animateNumber(element, start, end, duration = 500) {
+            const range = end - start;
+            const increment = range > 0 ? 1 : -1;
+            const stepTime = Math.abs(Math.floor(duration / range));
+            let current = start;
+
+            const timer = setInterval(() => {
+                current += increment;
+                element.textContent = current;
+                
+                if (current === end) {
+                    clearInterval(timer);
+                    // 添加弹跳效果
+                    element.classList.add('bounce');
+                    setTimeout(() => {
+                        element.classList.remove('bounce');
+                    }, 500);
+                }
+            }, stepTime);
+        }
+
+        // 本地存储管理 - 每日拍马屁次数
+        function getTodayKey() {
+            const today = new Date();
+            return `horse-slap-${today.getFullYear()}-${today.getMonth() + 1}-${today.getDate()}`;
+        }
+
+        function getTodayCount() {
+            const todayKey = getTodayKey();
+            const count = localStorage.getItem(todayKey);
+            return count ? parseInt(count) : 0;
+        }
+
+        function saveTodayCount(count) {
+            const todayKey = getTodayKey();
+            localStorage.setItem(todayKey, count.toString());
+        }
+
+        // 清理旧数据（保留最近7天的数据）
+        function cleanOldData() {
+            const today = new Date();
+            const keys = Object.keys(localStorage);
+            
+            keys.forEach(key => {
+                if (key.startsWith('horse-slap-')) {
+                    const dateParts = key.replace('horse-slap-', '').split('-');
+                    const recordDate = new Date(dateParts[0], dateParts[1] - 1, dateParts[2]);
+                    const daysDiff = Math.floor((today - recordDate) / (1000 * 60 * 60 * 24));
+                    
+                    // 删除7天前的数据
+                    if (daysDiff > 7) {
+                        localStorage.removeItem(key);
+                    }
+                }
+            });
+        }
+
+        // 祝福语库
+        const blessings = [
+            '💰 财源滚滚',
+            '🎉 好运连连',
+            '✨ 心想事成',
+            '🌟 大吉大利',
+            '💎 升职加薪',
+            '🏆 事业高升',
+            '🎊 万事如意',
+            '🌈 福星高照',
+            '💫 一帆风顺',
+            '🎁 心愿成真',
+            '🔥 财运亨通',
+            '⭐ 鸿运当头',
+            '🎯 步步高升',
+            '💝 喜事连连',
+            '🌸 花开富贵',
+            '🎪 笑口常开',
+            '🏮 福气满满',
+            '🎨 才华横溢',
+            '🚀 一飞冲天',
+            '🌺 美梦成真'
+        ];
+
+        let clickCount = getTodayCount(); // 从localStorage读取今日计数
+        const horseContainer = document.getElementById('horseContainer');
+        const horseHead = document.getElementById('horseHead');
+        const hoofLeft = document.getElementById('hoofLeft');
+        const hoofRight = document.getElementById('hoofRight');
+        const eyeLeft = document.getElementById('eyeLeft');
+        const eyeRight = document.getElementById('eyeRight');
+        const mouth = document.getElementById('mouth');
+        const blushLeft = document.getElementById('blushLeft');
+        const blushRight = document.getElementById('blushRight');
+        const clickCountDisplay = document.getElementById('clickCount');
+
+        // 初始化显示
+        if (clickCount > 0) {
+            // 如果有历史数据，使用滚动动画显示
+            animateNumber(clickCountDisplay, 0, clickCount, 800);
+        } else {
+            clickCountDisplay.textContent = clickCount;
+        }
+        
+        // 清理旧数据
+        cleanOldData();
+
+        // 创建背景粒子
+        function createParticles() {
+            const particlesContainer = document.getElementById('particles');
+            const colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#98D8C8', '#F7DC6F', '#BB8FCE', '#85C1E2'];
+            for (let i = 0; i < 20; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.width = Math.random() * 30 + 10 + 'px';
+                particle.style.height = particle.style.width;
+                particle.style.background = colors[Math.floor(Math.random() * colors.length)];
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.top = Math.random() * 100 + '%';
+                particle.style.animationDelay = Math.random() * 20 + 's';
+                particlesContainer.appendChild(particle);
+            }
+        }
+
+        // 创建祝福文案
+        function createBlessing(x, y) {
+            const blessing = document.createElement('div');
+            blessing.className = 'blessing';
+            blessing.textContent = blessings[Math.floor(Math.random() * blessings.length)];
+            blessing.style.left = x + 'px';
+            blessing.style.top = y + 'px';
+            const colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#98D8C8', '#F7DC6F', '#BB8FCE', '#85C1E2', '#F8B739', '#52B788', '#FF69B4', '#87CEEB'];
+            blessing.style.color = colors[Math.floor(Math.random() * colors.length)];
+            document.body.appendChild(blessing);
+
+            setTimeout(() => {
+                blessing.remove();
+            }, 2000);
+        }
+
+        // 创建彩屑 - 使用 canvas-confetti 库（性能优化）
+        function createConfetti(x, y) {
+            // 计算相对于窗口的位置（0-1之间）
+            const originX = x / window.innerWidth;
+            const originY = y / window.innerHeight;
+
+            // 第一波烟花效果
+            confetti({
+                particleCount: 100,
+                spread: 70,
+                origin: { x: originX, y: originY },
+                colors: ['#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#98D8C8', '#F7DC6F', '#BB8FCE', '#85C1E2'],
+                ticks: 200,
+                gravity: 1.2,
+                scalar: 1.2,
+                drift: 0,
+                startVelocity: 45
+            });
+
+            // 第二波星星效果（延迟）
+            setTimeout(() => {
+                confetti({
+                    particleCount: 50,
+                    spread: 100,
+                    origin: { x: originX, y: originY },
+                    colors: ['#FFD700', '#FFA500', '#FF69B4', '#87CEEB', '#98FB98'],
+                    ticks: 150,
+                    gravity: 0.8,
+                    scalar: 0.8,
+                    shapes: ['star'],
+                    startVelocity: 30
+                });
+            }, 200);
+
+            // 第三波圆形彩屑（延迟更久）
+            setTimeout(() => {
+                confetti({
+                    particleCount: 30,
+                    spread: 360,
+                    origin: { x: originX, y: originY },
+                    colors: ['#FF1744', '#F50057', '#D500F9', '#651FFF', '#00B0FF'],
+                    ticks: 100,
+                    gravity: 1.5,
+                    scalar: 1.5,
+                    shapes: ['circle'],
+                    startVelocity: 25
+                });
+            }, 400);
+        }
+
+        // 播放音效 (使用Web Audio API创建简单音效)
+        function playSound() {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+
+            oscillator.frequency.value = 600;
+            oscillator.type = 'sine';
+
+            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 0.1);
+        }
+
+        // 点击马屁股事件
+        horseContainer.addEventListener('click', (e) => {
+            const oldCount = clickCount;
+            clickCount++;
+            
+            // 使用滚动动画更新数字
+            animateNumber(clickCountDisplay, oldCount, clickCount, 300);
+            
+            // 保存到localStorage
+            saveTodayCount(clickCount);
+
+            // 触发动画
+            horseHead.classList.add('shake');
+            hoofLeft.classList.add('kick');
+            hoofRight.classList.add('kick');
+            
+            // 享受表情
+            eyeLeft.classList.add('enjoying');
+            eyeRight.classList.add('enjoying');
+            mouth.classList.add('enjoying');
+            blushLeft.classList.add('show');
+            blushRight.classList.add('show');
+
+            setTimeout(() => {
+                horseHead.classList.remove('shake');
+                hoofLeft.classList.remove('kick');
+                hoofRight.classList.remove('kick');
+                eyeLeft.classList.remove('enjoying');
+                eyeRight.classList.remove('enjoying');
+                mouth.classList.remove('enjoying');
+                blushLeft.classList.remove('show');
+                blushRight.classList.remove('show');
+            }, 500);
+
+            // 创建祝福文案和彩屑
+            const rect = horseContainer.getBoundingClientRect();
+            const x = rect.left + rect.width / 2;
+            const y = rect.top + rect.height / 2;
+
+            createBlessing(x, y);
+            createConfetti(x, y);
+            playSound();
+        });
+
+        // 初始化
+        createParticles();
+
+        // 添加一些随机的自动动画效果
+        setInterval(() => {
+            if (Math.random() > 0.7) {
+                horseHead.classList.add('shake');
+                setTimeout(() => {
+                    horseHead.classList.remove('shake');
+                }, 500);
+            }
+        }, 3000);
+    </script>
+</body>
+</html>

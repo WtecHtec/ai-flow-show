@@ -608,6 +608,11 @@ app.get("/apps/html2wx", async (req, res) => {
   res.sendFile(path.join(__dirname, 'apps/html2wx/index.html'));
 });
 
+// 拍马屁
+app.get("/apps/pai_ma_pi", async (req, res) => {
+  res.sendFile(path.join(__dirname, 'apps/paimapi/index.html'));
+});
+
 app.get("/404", async (req, res) => {
   res.sendFile(path.join(__dirname, '404/index.html'));
 });
