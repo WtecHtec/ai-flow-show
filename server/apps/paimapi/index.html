@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -26,6 +27,42 @@
             position: relative;
             -webkit-tap-highlight-color: transparent;
             touch-action: manipulation;
+
+            /* 默认皮肤 (棕色) */
+            --horse-main-light: #d4a574;
+            --horse-main-medium: #c9995e;
+            --horse-main-dark: #b8864e;
+            --horse-hair-light: #8b6f47;
+            --horse-hair-medium: #6d563a;
+            --horse-hair-dark: #4a3f2e;
+        }
+
+        /* 皮肤定义 */
+        body.skin-white {
+            --horse-main-light: #f5f5f5;
+            --horse-main-medium: #e0e0e0;
+            --horse-main-dark: #bdbdbd;
+            --horse-hair-light: #d4d4d4;
+            --horse-hair-medium: #a8a8a8;
+            --horse-hair-dark: #757575;
+        }
+
+        body.skin-black {
+            --horse-main-light: #4a4a4a;
+            --horse-main-medium: #333333;
+            --horse-main-dark: #1a1a1a;
+            --horse-hair-light: #2c2c2c;
+            --horse-hair-medium: #1a1a1a;
+            --horse-hair-dark: #000000;
+        }
+
+        body.skin-golden {
+            --horse-main-light: #ffd700;
+            --horse-main-medium: #ffc107;
+            --horse-main-dark: #ff8f00;
+            --horse-hair-light: #ffeb3b;
+            --horse-hair-medium: #fbc02d;
+            --horse-hair-dark: #f57f17;
         }
 
         .game-container {
@@ -56,7 +93,7 @@
             font-size: 48px;
             font-weight: bold;
             color: #FFD700;
-            text-shadow: 
+            text-shadow:
                 0 0 10px rgba(255, 215, 0, 0.8),
                 0 0 20px rgba(255, 215, 0, 0.6),
                 3px 3px 5px rgba(0, 0, 0, 0.5);
@@ -78,11 +115,14 @@
         }
 
         @keyframes glow {
-            0%, 100% { 
+
+            0%,
+            100% {
                 transform: scale(1);
                 filter: brightness(1);
             }
-            50% { 
+
+            50% {
                 transform: scale(1.1);
                 filter: brightness(1.3);
             }
@@ -123,6 +163,33 @@
             top: 40px;
             left: 30px;
             z-index: 3;
+            transform-origin: center bottom;
+        }
+
+        .horse-butt.jiggle {
+            animation: buttJiggle 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+
+        @keyframes buttJiggle {
+            0% {
+                transform: scale(1, 1);
+            }
+
+            25% {
+                transform: scale(1.15, 0.85);
+            }
+
+            50% {
+                transform: scale(0.95, 1.05);
+            }
+
+            75% {
+                transform: scale(1.05, 0.95);
+            }
+
+            100% {
+                transform: scale(1, 1);
+            }
         }
 
         /* 左半边屁股 */
@@ -131,11 +198,11 @@
             position: absolute;
             width: 110px;
             height: 200px;
-            background: linear-gradient(to right, #d4a574 0%, #c9995e 50%, #b8864e 100%);
+            background: linear-gradient(to right, var(--horse-main-light) 0%, var(--horse-main-medium) 50%, var(--horse-main-dark) 100%);
             border-radius: 100% 20% 40% 100%;
             left: 0;
             top: 10px;
-            box-shadow: 
+            box-shadow:
                 inset -10px 0 20px rgba(0, 0, 0, 0.2),
                 inset 0 10px 20px rgba(255, 255, 255, 0.1),
                 3px 3px 15px rgba(0, 0, 0, 0.3);
@@ -147,11 +214,11 @@
             position: absolute;
             width: 110px;
             height: 200px;
-            background: linear-gradient(to left, #d4a574 0%, #c9995e 50%, #b8864e 100%);
+            background: linear-gradient(to left, var(--horse-main-light) 0%, var(--horse-main-medium) 50%, var(--horse-main-dark) 100%);
             border-radius: 20% 100% 100% 40%;
             right: 0;
             top: 10px;
-            box-shadow: 
+            box-shadow:
                 inset 10px 0 20px rgba(0, 0, 0, 0.2),
                 inset 0 10px 20px rgba(255, 255, 255, 0.1),
                 -3px 3px 15px rgba(0, 0, 0, 0.3);
@@ -162,7 +229,7 @@
             position: absolute;
             width: 3px;
             height: 140px;
-            background: linear-gradient(to bottom, transparent 0%, #8b6f47 20%, #6d563a 50%, #8b6f47 80%, transparent 100%);
+            background: linear-gradient(to bottom, transparent 0%, var(--horse-hair-light) 20%, var(--horse-hair-medium) 50%, var(--horse-hair-light) 80%, transparent 100%);
             left: 50%;
             top: 50px;
             transform: translateX(-50%);
@@ -175,7 +242,7 @@
             position: absolute;
             width: 120px;
             height: 80px;
-            background: linear-gradient(to right, #d4a574 0%, #c9995e 100%);
+            background: linear-gradient(to right, var(--horse-main-light) 0%, var(--horse-main-medium) 100%);
             border-radius: 50% 50% 30% 30%;
             top: 60px;
             left: -40px;
@@ -189,7 +256,7 @@
             position: absolute;
             width: 80px;
             height: 140px;
-            background: linear-gradient(180deg, #8b6f47 0%, #6d563a 30%, #4a3f2e 100%);
+            background: linear-gradient(180deg, var(--horse-hair-light) 0%, var(--horse-hair-medium) 30%, var(--horse-hair-dark) 100%);
             border-radius: 50% 50% 30% 30%;
             top: -20px;
             left: 95px;
@@ -211,8 +278,15 @@
         }
 
         @keyframes tailWag {
-            0%, 100% { transform: rotate(0deg) translateX(0); }
-            50% { transform: rotate(-15deg) translateX(-15px); }
+
+            0%,
+            100% {
+                transform: rotate(0deg) translateX(0);
+            }
+
+            50% {
+                transform: rotate(-15deg) translateX(-15px);
+            }
         }
 
         /* 马头 - 在后方回头看 */
@@ -220,7 +294,7 @@
             position: absolute;
             width: 90px;
             height: 110px;
-            background: linear-gradient(135deg, #d4a574 0%, #c9995e 50%, #b8864e 100%);
+            background: linear-gradient(135deg, var(--horse-main-light) 0%, var(--horse-main-medium) 50%, var(--horse-main-dark) 100%);
             border-radius: 40% 40% 35% 35%;
             top: 80px;
             left: -50px;
@@ -247,9 +321,19 @@
         }
 
         @keyframes headShake {
-            0%, 100% { transform: rotate(45deg); }
-            25% { transform: rotate(30deg); }
-            75% { transform: rotate(60deg); }
+
+            0%,
+            100% {
+                transform: rotate(45deg);
+            }
+
+            25% {
+                transform: rotate(30deg);
+            }
+
+            75% {
+                transform: rotate(60deg);
+            }
         }
 
         /* 眼睛 */
@@ -291,8 +375,15 @@
         }
 
         @keyframes eyeEnjoy {
-            0%, 100% { height: 3px; }
-            50% { height: 2px; }
+
+            0%,
+            100% {
+                height: 3px;
+            }
+
+            50% {
+                height: 2px;
+            }
         }
 
         /* 腮红效果 */
@@ -342,8 +433,15 @@
         }
 
         @keyframes mouthSmile {
-            0%, 100% { height: 15px; }
-            50% { height: 18px; }
+
+            0%,
+            100% {
+                height: 15px;
+            }
+
+            50% {
+                height: 18px;
+            }
         }
 
         /* 耳朵 */
@@ -351,7 +449,7 @@
             position: absolute;
             width: 20px;
             height: 35px;
-            background: linear-gradient(to bottom, #c9995e 0%, #b8864e 100%);
+            background: linear-gradient(to bottom, var(--horse-main-medium) 0%, var(--horse-main-dark) 100%);
             border-radius: 50% 50% 0 0;
             top: -5px;
             box-shadow: inset 2px 2px 5px rgba(0, 0, 0, 0.2);
@@ -372,7 +470,7 @@
             position: absolute;
             width: 35px;
             height: 60px;
-            background: linear-gradient(180deg, #c9995e 0%, #8b6f47 50%, #4a3f2e 100%);
+            background: linear-gradient(180deg, var(--horse-main-medium) 0%, var(--horse-hair-light) 50%, var(--horse-hair-dark) 100%);
             border-radius: 5px 5px 15px 15px;
             bottom: -20px;
             z-index: 2;
@@ -398,7 +496,7 @@
             background: #2c2c2c;
             border-radius: 50%;
             border: 2px solid #1a1a1a;
-            box-shadow: 
+            box-shadow:
                 inset 0 2px 3px rgba(255, 255, 255, 0.2),
                 0 2px 5px rgba(0, 0, 0, 0.5);
         }
@@ -423,8 +521,15 @@
         }
 
         @keyframes hoofKick {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-20px); }
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-20px);
+            }
         }
 
         /* 祝福文案弹出效果 */
@@ -450,10 +555,12 @@
                 transform: translate(-50%, -50%) scale(0.5);
                 opacity: 0;
             }
+
             20% {
                 transform: translate(-50%, -50%) scale(1.2);
                 opacity: 1;
             }
+
             100% {
                 transform: translate(-50%, -150px) scale(1) rotate(10deg);
                 opacity: 0;
@@ -508,10 +615,12 @@
             0% {
                 transform: scale(1);
             }
+
             50% {
                 transform: scale(1.5);
                 color: #FFF;
             }
+
             100% {
                 transform: scale(1);
             }
@@ -540,10 +649,23 @@
         }
 
         @keyframes float {
-            0%, 100% { transform: translateY(0) translateX(0); }
-            25% { transform: translateY(-100px) translateX(50px); }
-            50% { transform: translateY(-50px) translateX(-50px); }
-            75% { transform: translateY(-150px) translateX(100px); }
+
+            0%,
+            100% {
+                transform: translateY(0) translateX(0);
+            }
+
+            25% {
+                transform: translateY(-100px) translateX(50px);
+            }
+
+            50% {
+                transform: translateY(-50px) translateX(-50px);
+            }
+
+            75% {
+                transform: translateY(-150px) translateX(100px);
+            }
         }
 
         /* 提示文字 */
@@ -567,14 +689,62 @@
         }
 
         @keyframes hintBounce {
-            0%, 100% { transform: translateX(-50%) translateY(0); }
-            50% { transform: translateX(-50%) translateY(-10px); }
+
+            0%,
+            100% {
+                transform: translateX(-50%) translateY(0);
+            }
+
+            50% {
+                transform: translateX(-50%) translateY(-10px);
+            }
+        }
+
+        /* 换肤按钮 */
+        .skin-btn {
+            position: fixed;
+            top: 30px;
+            left: 30px;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            padding: 10px 20px;
+            border-radius: 20px;
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            cursor: pointer;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            transition: all 0.3s;
+            z-index: 100;
+        }
+
+        .skin-btn:hover {
+            background: rgba(255, 255, 255, 0.4);
+            transform: scale(1.05);
+        }
+
+        .skin-btn:active {
+            transform: scale(0.95);
+        }
+
+        @media (max-width: 480px) {
+            .skin-btn {
+                top: 15px;
+                left: 15px;
+                padding: 8px 15px;
+                font-size: 14px;
+            }
         }
     </style>
 </head>
+
 <body>
     <!-- 背景粒子 -->
     <div id="particles"></div>
+
+    <!-- 换肤按钮 -->
+    <div class="skin-btn" id="skinBtn">🎨 换个马</div>
 
     <!-- 点击计数器 -->
     <div class="counter">
@@ -585,7 +755,7 @@
     <!-- 游戏主体 -->
     <div class="game-container">
         <div class="side-text">拍拍马屁</div>
-        
+
         <div class="horse-container" id="horseContainer">
             <div class="horse">
                 <div class="horse-back"></div>
@@ -606,7 +776,7 @@
                 <div class="hoof right" id="hoofRight"></div>
             </div>
         </div>
-        
+
         <div class="side-text">大吉大利</div>
     </div>
 
@@ -624,7 +794,7 @@
             const timer = setInterval(() => {
                 current += increment;
                 element.textContent = current;
-                
+
                 if (current === end) {
                     clearInterval(timer);
                     // 添加弹跳效果
@@ -657,13 +827,13 @@
         function cleanOldData() {
             const today = new Date();
             const keys = Object.keys(localStorage);
-            
+
             keys.forEach(key => {
                 if (key.startsWith('horse-slap-')) {
                     const dateParts = key.replace('horse-slap-', '').split('-');
                     const recordDate = new Date(dateParts[0], dateParts[1] - 1, dateParts[2]);
                     const daysDiff = Math.floor((today - recordDate) / (1000 * 60 * 60 * 24));
-                    
+
                     // 删除7天前的数据
                     if (daysDiff > 7) {
                         localStorage.removeItem(key);
@@ -715,7 +885,7 @@
         } else {
             clickCountDisplay.textContent = clickCount;
         }
-        
+
         // 清理旧数据
         cleanOldData();
 
@@ -803,40 +973,78 @@
         }
 
         // 播放音效 (使用Web Audio API创建简单音效)
+        // 播放音效 (合成“拍打”声)
         function playSound() {
-            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-            const oscillator = audioContext.createOscillator();
-            const gainNode = audioContext.createGain();
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            if (!AudioContext) return;
 
-            oscillator.connect(gainNode);
-            gainNode.connect(audioContext.destination);
+            const ctx = new AudioContext();
+            const t = ctx.currentTime;
 
-            oscillator.frequency.value = 600;
-            oscillator.type = 'sine';
+            // 1. 冲击声 (低频振荡器)
+            const osc = ctx.createOscillator();
+            const gainOsc = ctx.createGain();
 
-            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(150, t);
+            osc.frequency.exponentialRampToValueAtTime(40, t + 0.1);
 
-            oscillator.start(audioContext.currentTime);
-            oscillator.stop(audioContext.currentTime + 0.1);
+            gainOsc.gain.setValueAtTime(0.8, t);
+            gainOsc.gain.exponentialRampToValueAtTime(0.01, t + 0.15);
+
+            osc.connect(gainOsc);
+            gainOsc.connect(ctx.destination);
+
+            osc.start(t);
+            osc.stop(t + 0.15);
+
+            // 2. 拍打声 (白噪声)
+            const bufferSize = ctx.sampleRate * 0.1; // 0.1秒
+            const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+            const data = buffer.getChannelData(0);
+
+            for (let i = 0; i < bufferSize; i++) {
+                data[i] = Math.random() * 2 - 1;
+            }
+
+            const noise = ctx.createBufferSource();
+            noise.buffer = buffer;
+
+            const gainNoise = ctx.createGain();
+            gainNoise.gain.setValueAtTime(0.5, t);
+            gainNoise.gain.exponentialRampToValueAtTime(0.01, t + 0.1);
+
+            // 简单的低通滤波，模拟皮肤接触
+            const filter = ctx.createBiquadFilter();
+            filter.type = 'lowpass';
+            filter.frequency.setValueAtTime(1000, t);
+            filter.frequency.linearRampToValueAtTime(500, t + 0.1);
+
+            noise.connect(filter);
+            filter.connect(gainNoise);
+            gainNoise.connect(ctx.destination);
+
+            noise.start(t);
         }
 
         // 点击马屁股事件
         horseContainer.addEventListener('click', (e) => {
             const oldCount = clickCount;
             clickCount++;
-            
+
             // 使用滚动动画更新数字
             animateNumber(clickCountDisplay, oldCount, clickCount, 300);
-            
+
             // 保存到localStorage
             saveTodayCount(clickCount);
 
             // 触发动画
+            const horseButt = document.querySelector('.horse-butt');
+            horseButt.classList.add('jiggle');
             horseHead.classList.add('shake');
             hoofLeft.classList.add('kick');
             hoofRight.classList.add('kick');
-            
+
             // 享受表情
             eyeLeft.classList.add('enjoying');
             eyeRight.classList.add('enjoying');
@@ -845,6 +1053,7 @@
             blushRight.classList.add('show');
 
             setTimeout(() => {
+                horseButt.classList.remove('jiggle');
                 horseHead.classList.remove('shake');
                 hoofLeft.classList.remove('kick');
                 hoofRight.classList.remove('kick');
@@ -868,6 +1077,28 @@
         // 初始化
         createParticles();
 
+        // 换肤逻辑
+        const skins = ['', 'skin-white', 'skin-black', 'skin-golden'];
+        let currentSkinIndex = 0;
+        const skinBtn = document.getElementById('skinBtn');
+
+        skinBtn.addEventListener('click', (e) => {
+            e.stopPropagation(); // 防止触发拍马屁
+            currentSkinIndex = (currentSkinIndex + 1) % skins.length;
+
+            // 移除所有皮肤类
+            document.body.classList.remove(...skins.filter(s => s));
+
+            // 添加新皮肤类
+            if (skins[currentSkinIndex]) {
+                document.body.classList.add(skins[currentSkinIndex]);
+            }
+
+            // 简单的按钮动画
+            skinBtn.style.transform = 'scale(0.9)';
+            setTimeout(() => skinBtn.style.transform = 'scale(1)', 100);
+        });
+
         // 添加一些随机的自动动画效果
         setInterval(() => {
             if (Math.random() > 0.7) {
@@ -879,4 +1110,5 @@
         }, 3000);
     </script>
 </body>
+
 </html>
